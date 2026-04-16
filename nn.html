@@ -1,1 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NNTI 南梁(男娘)人格测试</title>
+  <style>
+    :root {
+      /* 将猫鼠的芝士黄改为更符合主题的樱花粉/浅紫色调 */
+      --bg: #fef8fa;
+      --panel: #ffffff;
+      --text: #3a2a32;
+      --muted: #8b7a82;
+      --line: #f2e1e8;
+      --soft: #fcf1f5;
+      --accent: #f48fb1;
+      --accent-strong: #d81b60;
+      --shadow: 0 16px 40px rgba(216, 27, 96, 0.08);
+      --radius: 22px;
+    }
 
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(circle at top left, #fffcfd 0, #fef8fa 36%, #fdf0f4 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 28px;
+      margin-top: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -60px;
+      top: -60px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(244, 143, 177, 0.18), rgba(244, 143, 177, 0.02));
+      pointer-events: none;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 52px);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      max-width: 680px;
+    }
+
+    .hero-minimal {
+      min-height: 48vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 42px 20px;
+    }
+    .hero-minimal h1 { max-width: none; margin: 0; }
+    .hero-actions-single { justify-content: center; margin-top: 28px; }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+      font: inherit;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { cursor: not-allowed; opacity: 0.55; transform: none; }
+
+    .btn-primary {
+      background: var(--accent-strong);
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(216, 27, 96, 0.18);
+      font-weight: 700;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--accent-strong);
+      padding: 14px 20px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      font-weight: 700;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .test-wrap, .result-wrap { margin-top: 22px; padding: 22px; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .progress {
+      flex: 1;
+      min-width: 240px;
+      height: 10px;
+      background: #f8eff2;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress > span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #f48fb1, #d81b60);
+      border-radius: inherit;
+      transition: width .22s ease;
+    }
+
+    .progress-text { color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+    .question-list { display: grid; gap: 16px; }
+    .question {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff, #fffcfd);
+    }
+    .question-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+    }
+    .question-title { font-size: 16px; line-height: 1.7; white-space: pre-wrap; font-weight: 600;}
+    .options { display: grid; gap: 10px; margin-top: 14px; }
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      transition: border-color .16s ease, background .16s ease, transform .16s ease;
+    }
+    .option:hover { border-color: #f0cdda; background: #fffafc; cursor: pointer; }
+    .option input { margin-top: 3px; accent-color: var(--accent-strong); transform: scale(1.1); flex-shrink: 0; }
+    .option-code { font-weight: 800; color: var(--accent-strong); min-width: 22px; }
+
+    .actions-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      padding-top: 6px;
+    }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.7; }
+
+    .result-layout { display: grid; gap: 18px; }
+    .result-top {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+    .poster-box, .type-box, .analysis-box, .dim-box, .note-box {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff, #fffcfd);
+    }
+    
+    .poster-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+      background: radial-gradient(circle at center, rgba(244,143,177,0.15), rgba(244,143,177,0) 60%), linear-gradient(180deg, #ffffff, #fdfafb);
+      text-align: center;
+    }
+    .poster-emoji {
+      font-size: 80px;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 10px 15px rgba(216, 27, 96, 0.2));
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    .poster-caption { font-size: 16px; font-weight: bold; color: var(--accent-strong); }
+
+    .type-kicker { font-size: 12px; color: var(--accent-strong); margin-bottom: 8px; letter-spacing: .06em; }
+    .type-name { font-size: clamp(30px, 5vw, 48px); line-height: 1.08; letter-spacing: -0.03em; font-weight: 800;}
+    .type-subname { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.8; }
+    .match {
+      margin-top: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      color: var(--accent-strong);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .analysis-box h3, .dim-box h3, .note-box h3 { font-size: 16px; margin-bottom: 12px; }
+    .analysis-box p { margin: 0; color: #403430; font-size: 15px; line-height: 1.9; white-space: pre-wrap; }
+    
+    .dim-list { display: grid; gap: 12px; }
+    .dim-item { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: #fff; }
+    .dim-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+    .dim-item-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .dim-item-score { color: var(--accent-strong); font-weight: 800; font-size: 14px; }
+    .dim-item p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+    .note-box p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+
+    .result-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+
+    @media (max-width: 860px) { .result-top { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) {
+      .shell { padding: 14px 12px 42px; }
+      .hero, .test-wrap, .result-wrap { padding: 16px; }
+      .hero h1 { font-size: 32px; }
+      .question-title { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section id="intro" class="screen active">
+      <div class="hero card hero-minimal">
+        <h1>MBTI已经过时，<br>NNTI (南梁人格指标) 来了。</h1>
+        <div class="hero-actions hero-actions-single">
+          <button id="startBtn" class="btn-primary">开始测试我的南梁人格</button>
+        </div>
+        <div style="margin-top: 2rem; color: var(--muted); font-size: 14px; line-height: 1.6;">
+          基于互联网ACGN次文化及贴吧真实生态编撰的硬核（胡扯）测试。<br>
+          整整50道超准送命题，看看你在“男娘”生态中，究竟属于什么稀有物种。
+        </div>
+      </div>
+    </section>
+
+    <section id="test" class="screen">
+      <div class="test-wrap card">
+        <div class="topbar">
+          <div class="progress"><span id="progressBar"></span></div>
+          <div class="progress-text" id="progressText">0 / 51</div>
+        </div>
+
+        <div id="questionList" class="question-list"></div>
+
+        <div class="actions-bottom">
+          <div class="hint" id="testHint">诚实作答，不要自欺欺人，直面你内心的渴望吧。</div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button id="backIntroBtn" class="btn-secondary">返回首页</button>
+            <button id="submitBtn" class="btn-primary" disabled>提交并查看身份</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="result" class="screen">
+      <div class="result-wrap card">
+        <div class="result-layout">
+          <div class="result-top">
+            <div class="poster-box" id="posterBox">
+              <div id="posterEmoji" class="poster-emoji">🎀</div>
+              <div id="posterCaption" class="poster-caption">测测你的隐藏属性</div>
+            </div>
+
+            <div class="type-box">
+              <div class="type-kicker" id="resultModeKicker">你的NNTI主身份</div>
+              <div class="type-name" id="resultTypeName">分析中...</div>
+              <div class="match" id="matchBadge">匹配度 100%</div>
+              <div class="type-subname" id="resultTypeSub">系统备注会显示在这里。</div>
+            </div>
+          </div>
+
+          <div class="analysis-box">
+            <h3>人格深度解析</h3>
+            <p id="resultDesc"></p>
+          </div>
+
+          <div class="dim-box">
+            <h3>NNTI 十五维度雷达</h3>
+            <div id="dimList" class="dim-list"></div>
+          </div>
+
+          <div class="note-box">
+            <h3>测试者须知</h3>
+            <p id="funNote">本测试仅供娱乐与次文化研究。不论你是硬核大佬还是云端看客，穿衣自由，开心最重要。接纳真实的自己，每一面都很美。</p>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button id="restartBtn" class="btn-secondary">再测一次</button>
+            <button id="toTopBtn" class="btn-primary">回到首页</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 维度重定义：南梁15维度
+    const dimensionMeta = {
+      S1: { name: 'S1 自我认知清晰度 (Identity)' },
+      S2: { name: 'S2 心理防御与接纳度 (Defense)' },
+      S3: { name: 'S3 审美执念度 (Aesthetic)' },
+      E1: { name: 'E1 现实隐蔽度 (Camouflage)' },
+      E2: { name: 'E2 穿搭跨界偏好 (Outfit)' },
+      E3: { name: 'E3 细节打理与护肤 (Grooming)' },
+      A1: { name: 'A1 二次元/冲浪纯度 (ACG Purity)' },
+      A2: { name: 'A2 萌物感知力 (Cuteness)' },
+      A3: { name: 'A3 脑洞与幻想程度 (Fantasy)' },
+      Ac1: { name: 'Ac1 实践行动力 (Action)' },
+      Ac2: { name: 'Ac2 伪装/化妆熟练度 (Skill)' },
+      Ac3: { name: 'Ac3 氪金/消费意愿 (Spending)' },
+      So1: { name: 'So1 社交渴望度 (Social Desire)' },
+      So2: { name: 'So2 情感依赖度 (Emotional)' },
+      So3: { name: 'So3 圈内活跃度 (Community)' }
+    };
+
+    // 50道题目
+    const questions = [
+      // S1: 自我认知 (3)
+      { id: 'q1', dim: 'S1', text: '当你照镜子时，你脑海中最常闪过的念头是？', options: [ { label: '如果能变得更可爱/更像女孩子就好了。', value: 3 }, { label: '感觉自己的气质介于两者之间，挺好。', value: 2 }, { label: '我是个纯爷们，这没什么好质疑的。', value: 1 } ] },
+      { id: 'q2', dim: 'S1', text: '如果在网上被人错认成“小姐姐”，你的反应是？', options: [ { label: '狂喜，截图发群炫耀。', value: 3 }, { label: '不主动澄清，将错就错也挺有意思。', value: 2 }, { label: '立刻解释自己是男的。', value: 1 } ] },
+      { id: 'q3', dim: 'S1', text: '对于“男娘”这个词汇，你觉得在自己身上适用的程度是？', options: [ { label: '完美契合，这就是我！', value: 3 }, { label: '在某些特定时刻或装扮下适用。', value: 2 }, { label: '和我毫无关系，我只是路过看热闹的。', value: 1 } ] },
+      
+      // S2: 心理防御 (3)
+      { id: 'q4', dim: 'S2', text: '如果突然被现实中的普通朋友发现了你的“特殊女装癖好”，你会？', options: [ { label: '无所谓，甚至当场给他安利哪家裙子好看。', value: 3 }, { label: '有点尴尬，但会试图用“玩梗”、“打赌输了”蒙混过去。', value: 2 }, { label: '社会性死亡，连夜扛着火车逃离这座城市。', value: 1 } ] },
+      { id: 'q5', dim: 'S2', text: '刚买完一套非常漂亮但也非常羞耻的衣服，快递到了，你的心情是？', options: [ { label: '迫不及待想穿上拍照！', value: 3 }, { label: '期待又忐忑，锁好房门拉上窗帘才敢拆。', value: 2 }, { label: '冲动消费后的无尽懊悔，甚至想直接退货（贤者时间）。', value: 1 } ] },
+      { id: 'q6', dim: 'S2', text: '面对网上对这个群体的恶评或不理解，你的心态是？', options: [ { label: '内心毫无波澜，甚至觉得他们不懂审美。', value: 3 }, { label: '稍微有点在意，但会自我消化。', value: 2 }, { label: '极度害怕被骂，因此绝不敢公开自己的任何相关信息。', value: 1 } ] },
+
+      // S3: 审美执念 (3)
+      { id: 'q7', dim: 'S3', text: '你对自己体型/骨架的在意程度有多高？', options: [ { label: '极度在意，经常因为肩宽/腿粗/身高而陷入容貌焦虑。', value: 3 }, { label: '有意识地在控制饮食或锻炼，希望能瘦一点。', value: 2 }, { label: '顺其自然，健康最重要，胖点瘦点无所谓。', value: 1 } ] },
+      { id: 'q8', dim: 'S3', text: '如果要发一张自拍，你的修图流程是？', options: [ { label: '瘦脸大眼磨皮美白加滤镜，甚至动用液化重塑骨相，不搞个半小时绝不发。', value: 3 }, { label: '套个滤镜，稍微修一下明显的瑕疵。', value: 2 }, { label: '原相机直出，或者根本不爱自拍。', value: 1 } ] },
+      { id: 'q9', dim: 'S3', text: '关于全身的穿搭协调性，你的要求是？', options: [ { label: '从发卡、美瞳、项链到袜子颜色，必须100%完美搭配。', value: 3 }, { label: '大体上风格一致，不出错就行。', value: 2 }, { label: '随便穿，能套在身上遮体就行。', value: 1 } ] },
+
+      // E1: 现实伪装 (3)
+      { id: 'q10', dim: 'E1', text: '在现实生活中，你的衣柜构成是？', options: [ { label: '清一色的男装，哪怕有女装也藏在最底层带锁的箱子里。', value: 3 }, { label: '有很多中性风、oversize的衣服，男女莫辨。', value: 2 }, { label: '大方挂着裙子和女装，家人/室友都已经见怪不怪了。', value: 1 } ] },
+      { id: 'q11', dim: 'E1', text: '平时出门在外的走路姿势或坐姿，你会？', options: [ { label: '刻意保持传统的“男性粗犷”做派，生怕被人看出端倪。', value: 3 }, { label: '随性自然，怎么舒服怎么来。', value: 2 }, { label: '不自觉地会有一些内八、并腿坐等比较柔软的习惯。', value: 1 } ] },
+      { id: 'q12', dim: 'E1', text: '你点外卖或者收快递时留的名字/称呼通常是？', options: [ { label: '纯粹的本名或先生。', value: 3 }, { label: '中性的昵称，让人看不出性别。', value: 2 }, { label: 'X女士/小姐姐/可爱的小名。', value: 1 } ] },
+
+      // E2: 穿搭偏好 (4)
+      { id: 'q13', dim: 'E2', text: '如果你可以毫无顾忌地选一套衣服出门，你会选？', options: [ { label: '全套的Lolita/JK制服/华丽Cos服！', value: 3 }, { label: '偏中性偏可爱的日系软妹服或地雷系。', value: 2 }, { label: '普通的T恤牛仔裤就挺好。', value: 1 } ] },
+      { id: 'q14', dim: 'E2', text: '你的睡衣通常是什么风格？', options: [ { label: '毛茸茸的动物连体衣、蕾丝吊带或带有可爱印花的长裙。', value: 3 }, { label: '简单的纯色棉质睡衣套装。', value: 2 }, { label: '大背心大裤衩，或者干脆裸睡。', value: 1 } ] },
+      { id: 'q15', dim: 'E2', text: '对于“绝对领域”（过膝袜与短裙之间的缝隙），你的态度是？', options: [ { label: '真理！最伟大的发明！必须拥有！', value: 3 }, { label: '挺好看的，欣赏一下。', value: 2 }, { label: '无感，冬天穿这不冷吗？', value: 1 } ] },
+      { id: 'q16', dim: 'E2', text: '在配饰方面，你最有可能购买的是？', options: [ { label: 'Choker（颈圈）、猫耳发箍、腿环等。', value: 3 }, { label: '简约的手表、简单的手链。', value: 2 }, { label: '什么配饰都不戴，嫌麻烦。', value: 1 } ] },
+
+      // E3: 细节打理 (4)
+      { id: 'q17', dim: 'E3', text: '你的日常护肤步骤有多繁琐？', options: [ { label: '水、精华、乳液、面霜、眼霜、防晒一个不落，定期做面膜。', value: 3 }, { label: '洗面奶洗完涂个大宝或水乳。', value: 2 }, { label: '清水洗脸，全靠基因硬抗。', value: 1 } ] },
+      { id: 'q18', dim: 'E3', text: '对待体毛（腿毛/腋毛等），你的处理方式是？', options: [ { label: '绝不容忍任何一根杂毛！脱毛膏、刮毛刀甚至激光脱毛全安排上。', value: 3 }, { label: '偶尔想穿裙子/短裤时会处理一下。', value: 2 }, { label: '身体发肤受之父母，茂盛点才够男人！', value: 1 } ] },
+      { id: 'q19', dim: 'E3', text: '你的手部和指甲护理情况？', options: [ { label: '经常涂护手霜，甚至会做美甲、涂透明指甲油。', value: 3 }, { label: '保持干净整洁，定期剪指甲。', value: 2 }, { label: '指甲缝里有灰，死皮倒刺是常态。', value: 1 } ] },
+      { id: 'q20', dim: 'E3', text: '出门前你会喷香水或使用带香味的洗护用品吗？', options: [ { label: '必不可少！必须有甜甜的蜜桃味/奶香味或花香。', value: 3 }, { label: '会有淡淡的洗发水或洗衣液清香。', value: 2 }, { label: '只有汗水和男人的纯正体味。', value: 1 } ] },
+
+      // A1: 冲浪纯度 (3)
+      { id: 'q21', dim: 'A1', text: '你的网络词汇量和玩梗能力如何？', options: [ { label: '贴吧/B站重度用户，各种亚文化烂梗信手拈来。', value: 3 }, { label: '能看懂大部分主流热梗，偶尔用用。', value: 2 }, { label: '现充，经常听不懂网上的人在说什么。', value: 1 } ] },
+      { id: 'q22', dim: 'A1', text: '你的番剧阅历/Vtuber观看时长如何？', options: [ { label: '老二次元了，V圈管人痴/猛男必看番倒背如流。', value: 3 }, { label: '看过一些出圈的热门动漫。', value: 2 }, { label: '不看动漫，只看短视频或电视剧。', value: 1 } ] },
+      { id: 'q23', dim: 'A1', text: '你的手机相册/表情包里最多的是？', options: [ { label: '二次元萌妹、各种可爱的猫猫狗狗、搞笑抽象图。', value: 3 }, { label: '风景照、朋友合照、普通表情。', value: 2 }, { label: '全是正儿八经的资料截图或什么都没有。', value: 1 } ] },
+
+      // A2: 萌物感知 (3)
+      { id: 'q24', dim: 'A2', text: '路过抓娃娃机或看到可爱的毛绒玩具时，你会？', options: [ { label: '走不动道，疯狂想贴贴，恨不得全买回家放床上。', value: 3 }, { label: '觉得挺可爱，但看看就走。', value: 2 }, { label: '内心毫无波动，觉得是积灰的无用之物。', value: 1 } ] },
+      { id: 'q25', dim: 'A2', text: '在网络聊天中，你使用颜文字（如 QwQ, =v=）和可爱表情包的频率？', options: [ { label: '每句话不带个颜文字或表情包就不会说话了啦(*/ω＼*)', value: 3 }, { label: '看聊天对象，遇到熟悉的人偶尔卖个萌。', value: 2 }, { label: '纯文字，连标点符号都懒得加，最多发个[微笑]。', value: 1 } ] },
+      { id: 'q26', dim: 'A2', text: '看到短视频里非常可爱的女孩子/男娘，你的第一想法是？', options: [ { label: '好可爱！想成为她！研究她的穿搭妆容！', value: 3 }, { label: '单纯欣赏美貌，点个赞。', value: 2 }, { label: '直接划走。', value: 1 } ] },
+
+      // A3: 幻想程度 (3)
+      { id: 'q27', dim: 'A3', text: '你是否曾在脑海里构建过“如果自己变成女生会怎样”的详细剧本？', options: [ { label: '每天都在脑补！连叫什么名字、穿什么衣服、怎么谈恋爱都想好了！', value: 3 }, { label: '偶尔无聊时会短暂幻想一下这种如果。', value: 2 }, { label: '从未想过这种不切实际的事情。', value: 1 } ] },
+      { id: 'q28', dim: 'A3', text: '玩RPG游戏或者网游时，你选择角色的性别通常是？', options: [ { label: '永远只建女号，给女儿买漂亮衣服是玩游戏的唯一动力。', value: 3 }, { label: '看哪个职业技能厉害或者模型顺眼就选哪个。', value: 2 }, { label: '只玩男号，代入感最重要。', value: 1 } ] },
+      { id: 'q29', dim: 'A3', text: '如果在梦里发现自己变成了萌妹子，醒来后你会？', options: [ { label: '极度失落，为什么不能一直做那个梦！', value: 3 }, { label: '觉得梦境挺有趣，回味一会。', value: 2 }, { label: '长舒一口气，还好是个梦。', value: 1 } ] },
+
+      // Ac1: 实践行动力 (4)
+      { id: 'q30', dim: 'Ac1', text: '你的购物车里存了很久的衣服/化妆品，最终购买的转化率是？', options: [ { label: '想买就买，立刻下单，快递已经走在路上了！', value: 3 }, { label: '放很久，等打折或者冲动时才会清空一下。', value: 2 }, { label: '永远只收藏不买，我是纯正的“云玩家”。', value: 1 } ] },
+      { id: 'q31', dim: 'Ac1', text: '对于尝试一种全新的（偏女性化）穿搭风格，你的行动力是？', options: [ { label: '看到教程立刻自己上手试穿试搭。', value: 3 }, { label: '在脑子里想半天，也许半年后会试一次。', value: 2 }, { label: '只看别人穿，自己绝对不碰。', value: 1 } ] },
+      { id: 'q32', dim: 'Ac1', text: '如果有机会，你敢穿着异装/女装去漫展等线下活动吗？', options: [ { label: '不仅敢去，还要盛装出席，疯狂集邮！', value: 3 }, { label: '如果有一群好朋友陪着壮胆，可能敢去。', value: 2 }, { label: '打死都不可能出门，最多在卧室里锁门穿。', value: 1 } ] },
+      { id: 'q33', dim: 'Ac1', text: '遇到不懂的化妆技巧或穿搭问题，你会？', options: [ { label: '疯狂刷B站/小红书教程，记笔记并拿自己脸做实验。', value: 3 }, { label: '马不停蹄地丢进收藏夹吃灰。', value: 2 }, { label: '遇到问题？我不化妆就不存在这个问题。', value: 1 } ] },
+
+      // Ac2: 技能熟练度 (4)
+      { id: 'q34', dim: 'Ac2', text: '你的化妆水平目前处于什么阶段？', options: [ { label: '炉火纯青的“易容术”大佬，修容眼妆贴假睫毛无所不能。', value: 3 }, { label: '新手村挣扎，只能打个底、涂个口红，经常画成如花。', value: 2 }, { label: '纯素颜，连粉底液和遮瑕的区别都不知道。', value: 1 } ] },
+      { id: 'q35', dim: 'Ac2', text: '你的“伪音”（模仿女声）技能如何？', options: [ { label: '夹子音/萝莉音/御姐音信手拈来，语音连麦毫无破绽。', value: 3 }, { label: '能捏一点嗓子，但在熟人面前会破功。', value: 2 }, { label: '纯粹的低音炮/公鸭嗓，开口必掉马。', value: 1 } ] },
+      { id: 'q36', dim: 'Ac2', text: '拍照时，你摆Pose和抓角度的能力？', options: [ { label: '完美掌握绿茶拍照法、俯拍显脸小、对镜自拍各种姿势。', value: 3 }, { label: '只会比个剪刀手，或者尴尬地站着。', value: 2 }, { label: '直男死亡仰拍视角。', value: 1 } ] },
+      { id: 'q37', dim: 'Ac2', text: '处理假发/做发型的能力？', options: [ { label: '顺手捻来，修剪刘海、打发蜡、戴发网一气呵成。', value: 3 }, { label: '买来什么样就往头上套，经常炸毛。', value: 2 }, { label: '寸头/短发万岁，从来不碰假发。', value: 1 } ] },
+
+      // Ac3: 消费意愿 (3)
+      { id: 'q38', dim: 'Ac3', text: '对于购买衣服/化妆品/小道具的月消费预算？', options: [ { label: '只要看到喜欢的就买，经常吃土，倾家荡产买裙子。', value: 3 }, { label: '精打细算，每个月固定一点预算，量力而行。', value: 2 }, { label: '白嫖至上，绝不在这方面花一分钱。', value: 1 } ] },
+      { id: 'q39', dim: 'Ac3', text: '面对一套非常好看但价格昂贵的萌系服饰，你会？', options: [ { label: '咬牙分期也要拿下！', value: 3 }, { label: '去二手平台闲鱼蹲个便宜的。', value: 2 }, { label: '立刻去拼夕夕搜同款几十块的山寨平替。', value: 1 } ] },
+      { id: 'q40', dim: 'Ac3', text: '你在提升颜值的周边消费（如美瞳、香水、护肤仪）上？', options: [ { label: '毫不手软，差生文具多，只要听说能变美就买。', value: 3 }, { label: '买点基础款够用就行。', value: 2 }, { label: '能不花钱就不花钱。', value: 1 } ] },
+
+      // So1: 社交渴望度 (4)
+      { id: 'q41', dim: 'So1', text: '加入一个新的同好交流群时，你的表现是？', options: [ { label: '立刻发一张带表情包的自我介绍，火速和大家打成一片。', value: 3 }, { label: '暗中观察几天，遇到感兴趣的话题再插嘴。', value: 2 }, { label: '万年潜水，甚至开了免打扰，只为了偷表情包。', value: 1 } ] },
+      { id: 'q42', dim: 'So1', text: '对于线下面基/参加漫展，你的态度是？', options: [ { label: '极度渴望！我是漫展显眼包，最喜欢出去交朋友！', value: 3 }, { label: '如果有特别好的朋友邀约，可以考虑去一下。', value: 2 }, { label: '死宅绝不出门，人多的地方让我呼吸困难。', value: 1 } ] },
+      { id: 'q43', dim: 'So1', text: '在游戏里遇到路人，你会主动开麦交流吗？', options: [ { label: '不仅开麦，还要用伪音逗路人玩。', value: 3 }, { label: '只跟认识的车队朋友开麦。', value: 2 }, { label: '永远闭麦，打字都嫌累。', value: 1 } ] },
+      { id: 'q44', dim: 'So1', text: '你加好友的门槛有多高？', options: [ { label: '来者不拒，列表全是各种群里加的网友。', value: 3 }, { label: '聊得来的才会加。', value: 2 }, { label: '极度社恐，看到好友申请就紧张，通常直接忽略。', value: 1 } ] },
+
+      // So2: 情感依赖度 (3)
+      { id: 'q45', dim: 'So2', text: '如果一天没有人主动找你聊天，你会觉得？', options: [ { label: '孤独寂寞冷，疯狂发动态/朋友圈吸引注意力。', value: 3 }, { label: '有点无聊，自己找点番看或者打游戏。', value: 2 }, { label: '太爽了！终于享受到了不被打扰的清净时光。', value: 1 } ] },
+      { id: 'q46', dim: 'So2', text: '当你遇到烦心事或者挫折时，你的首选发泄方式是？', options: [ { label: '找固聊/闺蜜疯狂吐槽，寻求情绪价值和抱抱。', value: 3 }, { label: '在社交小号上发几条无病呻吟的EMO文案。', value: 2 }, { label: '蒙头睡一觉，或者自己一个人静静消化。', value: 1 } ] },
+      { id: 'q47', dim: 'So2', text: '在亲密关系（网恋/固玩）中，你的状态更偏向于？', options: [ { label: '极度粘人，患得患失，恨不得24小时连麦的撒娇精。', value: 3 }, { label: '保持一定的空间，互相关心。', value: 2 }, { label: '独立寡王，不需要任何人我也能过得很好。', value: 1 } ] },
+
+      // So3: 圈内活跃度 (3)
+      { id: 'q48', dim: 'So3', text: '你在社交平台（如小红书/贴吧/推）发布自己照片的频率是？', options: [ { label: '高产似母猪，各种风格疯狂发，享受被夸奖的快感。', value: 3 }, { label: '偶尔拍得特别满意的才会发，有时还会设为仅好友可见。', value: 2 }, { label: '永远只做看客，从未发过任何自己的内容。', value: 1 } ] },
+      { id: 'q49', dim: 'So3', text: '如果有圈内萌新来向你请教穿搭或化妆经验，你会？', options: [ { label: '化身热情导师，写下千字长文，手把手教他入门！', value: 3 }, { label: '简单回复几句或者甩几个链接给他自己看。', value: 2 }, { label: '直接无视，或者让他自己去搜。', value: 1 } ] },
+      { id: 'q50', dim: 'So3', text: '面对网络上别人的优质内容，你的常规操作是？', options: [ { label: '疯狂点赞评论转发，“老婆好美！”、“踩我！”，活跃得像个假号。', value: 3 }, { label: '默默点个赞。', value: 2 }, { label: '白嫖看完，点赞都懒得点直接划走。', value: 1 } ] }
+    ];
+
+    const specialQuestions = [
+      { id: 'lag_gate_q1', special: true, text: '你是否曾经在“秘密行动”（比如试衣服/化妆）时，差点被家人或室友发现？', options: [ { label: '根本没藏过，光明正大。', value: 1 }, { label: '藏得很死，从未有过翻车风险。', value: 2 }, { label: '有过非常惊险的擦肩而过，心跳骤停。', value: 3 }, { label: '已经被发现了，当场社死过。', value: 4 } ] },
+      { id: 'lag_gate_q2', special: true, text: '在那次惊险/社死经历之后，你的反应是？', options: [ { label: '吃一堑长一智，加强了保密措施。', value: 1 }, { label: '彻底摆烂了，破罐子破摔，直接摊牌！', value: 2 } ] }
+    ];
+
+    // NNTI 27种人格类型重写
+    const TYPE_LIBRARY = {
+      "CTRL": { code: "CTRL", cn: "百变幻影坦克", emoji: "🎭", intro: "网络老婆，现实好厚米。", desc: "你是互联网上最高深的伪装大师！在线上，你是声音甜美、穿搭精致的赛博魅魔，让无数群友直呼老婆；但在线下，你却能秒切直男模式，和兄弟们一起开黑撸串毫无违和感。你对两种身份的切换游刃有余，享受着这种“反差感”带来的极致乐趣。" },
+      "ATM-er": { code: "ATM-er", cn: "赛博修图女娲", emoji: "📱", intro: "没有丑照片，只有不努力的P图手。", desc: "在这个颜即正义的赛博世界里，你掌握了核心科技——亚洲四大邪术之首。你不一定有最贵的衣服或最好的化妆品，但你的修图技术绝对登峰造极。你能把粗犷的骨架捏成娇小玲珑，把胡茬修成吹弹可破的水光肌。你是造梦者，即使在虚拟网络里，你也要维持最完美的人设。" },
+      "Dior-s": { code: "Dior-s", cn: "深柜地缚灵", emoji: "🚪", intro: "看不见我看不见我，千万别发现我...", desc: "你拥有一颗向往美好的心，却被现实的枷锁死死困住。你极度缺乏安全感，买个快递都要左顾右盼，所有的“作案工具”都藏在最隐秘的角落。你的所有勇敢都只敢在深夜锁门拉上窗帘后释放。卸下伪装时，你比谁都失落，你最大的愿望就是能有一天光明正大地走在阳光下。" },
+      "BOSS": { code: "BOSS", cn: "漫展社交恐怖分子", emoji: "🔥", intro: "集邮吗扩列吗！看镜头！", desc: "社恐？不存在的！你是圈内最闪耀的显眼包。无论是漫展还是同好聚会，你总是全场最活跃的那个。你不仅敢穿最夸张的衣服出门，还敢在大街上毫无顾忌地摆Pose。你的自信光芒万丈，你根本不在乎路人的眼光，因为你知道，只要自己不尴尬，尴尬的就是别人。" },
+      "THAN-K": { code: "THAN-K", cn: "温柔系知心男妈妈", emoji: "🍵", intro: "摸摸头，今天有乖乖护肤吗？", desc: "你是圈子里的情感树洞和新手导师。你脾气极其温和，很少参与骂战，总是耐心解答萌新们关于化妆、买衣服的各种小白问题。你自带一种母性光辉，别人受了委屈都喜欢找你倾诉。你可能不是最耀眼的那一个，但绝对是最让人感到安心的存在。" },
+      "OH-NO": { code: "OH-NO", cn: "见光死退堂鼓", emoji: "😰", intro: "算了算了，我还是不弄了。", desc: "行动上的矮子，退堂鼓国家级表演艺术家。每次看到好看的衣服，你都脑补了一万遍自己穿上的样子，结果一到付尾款或者要拆快递的时候，立刻陷入巨大的自我怀疑：“我真的能穿吗？”“太羞耻了吧？”。你无数次在破茧成蝶的边缘反复横跳，最后又缩回了舒适圈。" },
+      "GOGO": { code: "GOGO", cn: "冲动消费狂魔", emoji: "💸", intro: "买买买！不管适不适合，先买了再说！", desc: "千手观音就是你！你的衣柜里塞满了各种一时冲动买下、却连吊牌都没剪的衣服。你极度容易被种草，看到群里有人发好看的图，你第一句话就是“求链接”。你的热情来得快去得也快，你享受的是拆快递和拥有那一瞬间的快感，至于穿不穿得出去，那是以后的事。" },
+      "SEXY": { code: "SEXY", cn: "重度LO裙狂热者", emoji: "🎀", intro: "哪怕吃土，裙摆也要蓬松！", desc: "你对华丽、可爱、蕾丝充满了极致的执念。相比于日常的穿搭，你更愿意把钱砸在那些平时根本穿不出门的繁复小裙子上。你了解各大店铺的柄图，懂得如何搭配裙撑。对你来说，这不是穿衣，而是一种神圣的仪式感，穿上它们，你就是自己王国里的公主。" },
+      "LOVE-R": { code: "LOVE-R", cn: "极度缺爱撒娇精", emoji: "🥺", intro: "呜呜呜不理我，要抱抱！", desc: "你是互联网上最需要情绪价值的小可怜。你极度害怕孤独，你的所有装扮、发图、卖萌，很大程度上都是为了吸引别人的注意力和赞美。如果一天没人陪你聊天，或者消息被敷衍，你会立刻陷入精神内耗。你渴望被人无条件地宠溺着，像一只急需顺毛的小猫。" },
+      "MUM": { code: "MUM", cn: "圈内养老护林员", emoji: "🌲", intro: "你们卷吧，我看着就好。", desc: "你可能曾经也是个疯狂发图、买买买的活跃分子，但现在你已经步入了“养老期”。你不再追求极致的妆容和昂贵的衣服，更喜欢穿着舒适的睡衣在群里看着新人们折腾。你掌握着圈内的大量吃瓜信息，偶尔指点江山，深藏功与名。" },
+      "FAKE": { code: "FAKE", cn: "搞笑整活抽象派", emoji: "🤡", intro: "好看不能当饭吃，但搞笑可以！", desc: "你把这个亚文化玩成了一种喜剧艺术。比起拍那些精致但千篇一律的美照，你更喜欢发一些由于化妆翻车、假发炸毛或者反光镜暴露直男内裤导致的抽象名场面。你是全群的快乐源泉，大家都不把你当女神看，只把你当成能随时整活的好兄弟。" },
+      "OJBK": { code: "OJBK", cn: "佛系云端梦想家", emoji: "☁️", intro: "我看看就行，我不买。", desc: "你是最纯正的云玩家。你收藏了无数个化妆教程，加了十几个交流群，手机里存了几千张别人的美图，但你自己却从来没有真正付诸过行动。你用极低的成本享受着这个圈子带来的精神愉悦，没有任何容貌焦虑，也没有破产风险，因为你深知“云养”才是最高境界。" },
+      "MALO": { code: "MALO", cn: "硬核技术流Coser", emoji: "✂️", intro: "只要技术好，性别不是问题。", desc: "你是个纯正的技术帝！你不满足于简单的换装，而是把精力投入在化妆术、修毛、甚至道具制作上。你可以用高超的技术把一张阳刚的脸生生化成漫撕女。对你而言，这不是性别的跨越，而是一项具有挑战性的技术活，你享受那种“欺骗”了所有人眼睛的成就感。" },
+      "JOKE-R": { code: "JOKE-R", cn: "贴吧钓鱼老哥", emoji: "🎣", intro: "今天又钓上来了几个直男？", desc: "你是网络深水区的资深钓鱼佬。你极度擅长利用变声器、网图或者高超的伪装技术去一些直男聚集地发帖钓鱼。看着那些不知真相的网友在底下疯狂献殷勤，是你最快乐的时刻。你亦正亦邪，游走在被封号的边缘，把互联网玩弄于股掌之间。" },
+      "WOC!": { code: "WOC!", cn: "大惊小怪萌新", emoji: "🐣", intro: "哇！这个怎么弄的！天哪太好看了吧！", desc: "刚踏入新世界大门的你，看什么都觉得新鲜。你像一块海绵一样疯狂吸收各种奇奇怪怪的知识（比如什么是硅胶义乳，什么是束腰）。你常常因为发现“原来那是个男的”而发出没见过世面的惊呼。你充满热情，但也很容易踩坑交智商税。" },
+      "THIN-K": { code: "THIN-K", cn: "理论级穿搭导师", emoji: "📚", intro: "理论上，你应该这么穿显瘦...", desc: "你的实战经验可能几乎为零，但你的理论知识绝对是博士生级别的。你懂得冷暖皮的配色原理、H型和梨型身材的扬长避短策略。群友发照片，你能一眼看出他眼线画歪了或者裙长不对。你是纸上谈兵的王者，只要不让你自己上脸实操，你永远是最自信的导师。" },
+      "SHIT": { code: "SHIT", cn: "互联网重拳出击", emoji: "🥊", intro: "就这？这也敢发出来辣眼睛？", desc: "圈内的毒舌评论家/键盘侠。你的眼光极高，审美极其挑剔。看到别人发的不完美的照片或者拉胯的穿搭，你总是忍不住在心里（或者直接开麦）冷嘲热讽。你的高标准不仅折磨别人，也折磨自己，导致你常常陷入极度的容貌焦虑中无法自拔。" },
+      "ZZZZ": { code: "ZZZZ", cn: "三分钟热度咸鱼", emoji: "🐟", intro: "好麻烦啊，卸妆好累，算了。", desc: "你的热情就像龙卷风，来得快去得也快。心血来潮时，你能花三个小时化个全妆拍两张照片；但拍完之后，面对繁杂的卸妆和洗假发流程，你瞬间生无可恋。大部分时间你都在嫌麻烦，所以你一年到头可能也就营业那么一两次，剩下的时间全在当一条躺平的咸鱼。" },
+      "POOR": { code: "POOR", cn: "拼夕夕捡漏王", emoji: "🛒", intro: "只要9块9，全套带回家！", desc: "你是极致的性价比之王！在这个极其烧钱的爱好里，你硬是杀出了一条血路。你深知拼夕夕的各种暗号，熟练掌握用几十块钱凑出一套过得去的穿搭技巧。哪怕衣服有线头、裙子像塑料，只要能拍出图来，你就不觉得亏。你用最少的钱，装了最大的杯。" },
+      "MONK": { code: "MONK", cn: "高冷孤狼原石", emoji: "💎", intro: "我不加群，也不扩列，我自己玩。", desc: "你拥有极好的底子（可能是天生骨架小或者长相清秀），但你极度厌恶社交和抱团。你只是单纯地喜欢穿自己喜欢的衣服，不需要任何人的评价和赞美。你的社交账号极其干净，偶尔发一张氛围感拉满的照片就消失，留给世人一个高冷而神秘的背影。" },
+      "IMSB": { code: "IMSB", cn: "又菜又爱玩", emoji: "🤕", intro: "今天化得好像鬼，但我还是很开心！", desc: "你的技术非常烂，审美也常常跑偏，导致你化出来的妆像唱戏，穿的衣服像精神小伙偷穿老妈衣柜。但最难能可贵的是你的心态！你完全不在乎别人的嘲笑，你真的是在享受这个过程。你不完美，但你绝对是整个圈子里玩得最开心、最没有心理负担的人。" },
+      "SOLO": { code: "SOLO", cn: "自娱自乐手艺人", emoji: "🧵", intro: "买不到合适的？我自己做！", desc: "你不爱随波逐流，你有着自己极其独特的审美偏好。如果市面上买不到合你心意的尺码或款式，你会自己买缝纫机改衣服；如果没有合适的配饰，你用热熔胶自己做。你的世界很小，只要沉浸在自己的小手工车间里，你就感到无比满足。" },
+      "FUCK": { code: "FUCK", cn: "容貌焦虑受害者", emoji: "🥀", intro: "我怎么这么丑！腿怎么这么粗！", desc: "你被互联网上各种精修神图严重洗脑，陷入了极度的容貌焦虑。你每天对着镜子放大自己的缺点：毛孔、胡青、宽肩、大脚。你觉得永远都达不到自己想要的那种“完美”状态。放过自己吧朋友！你看到的美好大都是滤镜和P图的功劳，接受自己不完美的一面才是解脱。" },
+      "DEAD": { code: "DEAD", cn: "现充退圈老咸鱼", emoji: "🍂", intro: "都是青春，现在要养家糊口了。", desc: "你曾经也是个疯狂的圈内人，但随着年龄的增长、学业或工作的压力，你逐渐把这部分自己封印了起来。你的衣柜里已经换成了笔挺的西装或沉闷的工服，那些小裙子和假发都在箱底落了灰。你现在偶尔上线看看年轻人的狂欢，感叹一句青春真好，然后继续去搬现实的砖。" },
+      "IMFW": { code: "IMFW", cn: "求包养小废物", emoji: "🍼", intro: "大佬饿饿，饭饭，裙裙！", desc: "你深谙互联网的软饭硬吃之道。你深知自己的优势在于会撒娇、会提供情绪价值，所以你理直气壮地在网上寻找愿意为你买单的“大腿”。你懒得自己去研究性价比，你的名言是：“只要我叫得够甜，总有大佬会给我买单的！”。某种意义上，你也是个生存天才。" },
+      "HHHH": { code: "HHHH", cn: "薛定谔的乐子人", emoji: "🤪", intro: "我也不知道我是啥，好玩就行了哈哈哈哈！", desc: "系统无法识别你的底层逻辑，因为你根本就没有逻辑！你可能是误入歧途的直男，也可能是看透一切的乐子人。你答题全凭心情，你的行为毫无规律。你在这个圈子里就像一阵风，谁也抓不住你，你只为了寻找最纯粹的乐趣而存在。" },
+      "DRUNK": { code: "DRUNK", cn: "社会性死亡幸存者", emoji: "💀", intro: "别问了，我已经连夜换了星球生活。", desc: "警告！常规人格已被强制覆盖！你那次惊天动地的翻车社死经历，已经重塑了你的灵魂！不管你曾经多么精致、多么高冷，在被人当场抓包、或者聊天记录被公开处刑的那一刻，一切都灰飞烟灭了。你能活到现在，说明你的心理承受能力已经突破了人类的极限。敬你是个汉子！" }
+    };
+
+    const DIM_EXPLANATIONS = {
+      S1: { L: "对自己的性别认知和气质定位感到极其迷茫，甚至排斥。", M: "处于探索阶段，不抗拒新鲜事物，但在直男和跨界之间摇摆。", H: "对自己的内心渴望极其明确，毫无疑惑，接纳最真实的自己。" },
+      S2: { L: "极度害怕暴露，心理负担极重，常常伴随强烈的羞耻感和内耗。", M: "会做一定程度的保密，但也能在安全的环境下自我放松。", H: "拥有钢铁般的心理素质，毫不在意世俗眼光，甚至敢于公开。" },
+      S3: { L: "糙汉子心态，能穿就行，对细节和体态美感毫不关心。", M: "有追求美的意识，会用滤镜和简单打扮提升自己。", H: "极致的完美主义者，修图一小时，搭配半天，不能容忍一丝瑕疵。" },
+      E1: { L: "光明正大，在现实中也不掩饰自己的偏好，甚至大胆穿搭出门。", M: "薛定谔的直男，用中性风打掩护，让人摸不清底细。", H: "深不可测的地缚灵，现实中伪装得严严实实，甚至刻意表现得粗犷。" },
+      E2: { L: "只穿最基础、最直男的日常服饰，实用舒适至上。", M: "喜欢带点可爱元素的中性服饰、痛衫或者简单的软妹服。", H: "重度制服/LO裙/Cos服控，对极致女性化的繁复穿搭充满狂热。" },
+      E3: { L: "纯天然（懒），不护肤不刮毛，充满野性之美。", M: "基础洗护，出门偶尔收拾一下，保持干净清爽。", H: "精致到头发丝和指甲盖，全身脱毛，香水腌制，护肤品比饭还贵。" },
+      A1: { L: "纯正现充，对网络亚文化、烂梗和二次元世界知之甚少。", M: "普通冲浪选手，能接上热门梗，看过几部经典动漫。", H: "重度二次元/贴吧/V圈原住民，互联网黑话十级学者。" },
+      A2: { L: "钢铁直男审美，对任何“可爱”的事物都免疫且无感。", M: "遇到可爱的东西会觉得心情好，偶尔使用颜文字。", H: "万物皆可萌化，看到可爱事物就走不动道，疯狂想贴贴。" },
+      A3: { L: "极端的现实主义者，从不做白日梦，只看重眼前的生活。", M: "偶尔会在无聊或睡前进行短暂的脑内小剧场幻想。", H: "重度脑内妄想症，拥有一个完整的幻想世界，甚至经常自我代入。" },
+      Ac1: { L: "纯正的云端看客，只收藏不购买，只看教程不实践。", M: "经过漫长的心理斗争后，偶尔会尝试迈出一次步子。", H: "极强的行动力，想买就买，想穿就穿，绝不拖泥带水。" },
+      Ac2: { L: "零基础小白，纯素颜，不会摆Pose，拍照纯直男视角。", M: "正在努力学习中，懂得一些基础技巧，但常常失误翻车。", H: "易容术大师/伪音大佬，技能树点满，能够以假乱真。" },
+      Ac3: { L: "零氪党/白嫖怪，绝不在这方面投入哪怕一块钱的真金白银。", M: "理性消费，量力而行，会在预算内追求性价比。", H: "氪金狂魔，只要为了好看，吃土分期也在所不惜。" },
+      So1: { L: "极度社恐，万年潜水，抗拒任何形式的线下或线上深入社交。", M: "偏好小圈子社交，只和熟人或者少数聊得来的朋友互动。", H: "社交牛逼症，到处扩列，到处认亲，最喜欢在人群中闪耀。" },
+      So2: { L: "冷酷寡王，内心强大且独立，不需要依赖任何人提供情绪价值。", M: "偶尔感到孤单，希望能有朋友互相倾诉和陪伴。", H: "极度缺爱，患得患失的撒娇精，需要24小时高强度的陪伴和赞美。" },
+      So3: { L: "幽灵看客，从不发动态，从不评论，只默默浏览别人的内容。", M: "偶尔诈尸发点状态，心情好的时候给别人点个赞。", H: "高产似母猪，活跃在各个平台的第一线，发图狂魔兼评论区常客。" }
+    };
+
+    const dimensionOrder = ['S1','S2','S3','E1','E2','E3','A1','A2','A3','Ac1','Ac2','Ac3','So1','So2','So3'];
+    // 保持原来的Pattern映射逻辑不变
+    const NORMAL_TYPES = [
+      { code: "CTRL", pattern: "HHH-HMH-MHH-HHH-MHM" },
+      { code: "ATM-er", pattern: "HHH-HHM-HHH-HMH-MHL" },
+      { code: "Dior-s", pattern: "MHM-MMH-MHM-HMH-LHL" },
+      { code: "BOSS", pattern: "HHH-HMH-MMH-HHH-LHL" },
+      { code: "THAN-K", pattern: "MHM-HMM-HHM-MMH-MHL" },
+      { code: "OH-NO", pattern: "HHL-LMH-LHH-HHM-LHL" },
+      { code: "GOGO", pattern: "HHM-HMH-MMH-HHH-MHM" },
+      { code: "SEXY", pattern: "HMH-HHL-HMM-HMM-HLH" },
+      { code: "LOVE-R", pattern: "MLH-LHL-HLH-MLM-MLH" },
+      { code: "MUM", pattern: "MMH-MHL-HMM-LMM-HLL" },
+      { code: "FAKE", pattern: "HLM-MML-MLM-MLM-HLH" },
+      { code: "OJBK", pattern: "MMH-MMM-HML-LMM-MML" },
+      { code: "MALO", pattern: "MLH-MHM-MLH-MLH-LMH" },
+      { code: "JOKE-R", pattern: "LLH-LHL-LML-LLL-MLM" },
+      { code: "WOC!", pattern: "HHL-HMH-MMH-HHM-LHH" },
+      { code: "THIN-K", pattern: "HHL-HMH-MLH-MHM-LHH" },
+      { code: "SHIT", pattern: "HHL-HLH-LMM-HHM-LHH" },
+      { code: "ZZZZ", pattern: "MHL-MLH-LML-MML-LHM" },
+      { code: "POOR", pattern: "HHL-MLH-LMH-HHH-LHL" },
+      { code: "MONK", pattern: "HHL-LLH-LLM-MML-LHM" },
+      { code: "IMSB", pattern: "LLM-LMM-LLL-LLL-MLM" },
+      { code: "SOLO", pattern: "LML-LLH-LHL-LML-LHM" },
+      { code: "FUCK", pattern: "MLL-LHL-LLM-MLL-HLH" },
+      { code: "DEAD", pattern: "LLL-LLM-LML-LLL-LHM" },
+      { code: "IMFW", pattern: "LLH-LHL-LML-LLL-MLL" }
+    ];
+
+    const app = { shuffledQuestions: [], answers: {}, previewMode: false };
+    const screens = { intro: document.getElementById('intro'), test: document.getElementById('test'), result: document.getElementById('result') };
+    const questionList = document.getElementById('questionList');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const submitBtn = document.getElementById('submitBtn');
+    const testHint = document.getElementById('testHint');
+
+    function showScreen(name) {
+      Object.entries(screens).forEach(([key, el]) => { el.classList.toggle('active', key === name); });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function getVisibleQuestions() {
+      const visible = [...app.shuffledQuestions];
+      const gateIndex = visible.findIndex(q => q.id === 'lag_gate_q1');
+      if (gateIndex !== -1 && (app.answers['lag_gate_q1'] === 3 || app.answers['lag_gate_q1'] === 4)) {
+        visible.splice(gateIndex + 1, 0, specialQuestions[1]);
+      }
+      return visible;
+    }
+
+    function renderQuestions() {
+      const visibleQuestions = getVisibleQuestions();
+      questionList.innerHTML = '';
+      visibleQuestions.forEach((q, index) => {
+        const card = document.createElement('article');
+        card.className = 'question';
+        card.innerHTML = `
+          <div class="question-meta">
+            <div class="badge">第 ${index + 1} 题</div>
+            <div>${q.special ? '核心灵魂拷问' : 'NNTI基础维度'}</div>
+          </div>
+          <div class="question-title">${q.text}</div>
+          <div class="options">
+            ${q.options.map((opt, i) => {
+              const code = ['A', 'B', 'C', 'D'][i] || String(i + 1);
+              const checked = app.answers[q.id] === opt.value ? 'checked' : '';
+              return `
+                <label class="option">
+                  <input type="radio" name="${q.id}" value="${opt.value}" ${checked} />
+                  <div class="option-code">${code}</div>
+                  <div>${opt.label}</div>
+                </label>
+              `;
+            }).join('')}
+          </div>
+        `;
+        questionList.appendChild(card);
+      });
+
+      questionList.querySelectorAll('input[type="radio"]').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const { name, value } = e.target;
+          app.answers[name] = Number(value);
+          if (name === 'lag_gate_q1') {
+            if (Number(value) !== 3 && Number(value) !== 4) delete app.answers['lag_gate_q2'];
+            renderQuestions();
+            return;
+          }
+          updateProgress();
+        });
+      });
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const visibleQuestions = getVisibleQuestions();
+      const total = visibleQuestions.length;
+      const done = visibleQuestions.filter(q => app.answers[q.id] !== undefined).length;
+      const percent = total ? (done / total) * 100 : 0;
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = `${done} / ${total}`;
+      const complete = done === total && total > 0;
+      submitBtn.disabled = !complete;
+      testHint.textContent = complete ? '填涂完毕。深呼吸，准备迎接现实的审判。' : '请诚实作答每一道题，听从内心的声音。';
+    }
+
+    // 动态计算LMH等级，适应不定数量的题目
+    function sumToLevel(score, dimCount) {
+        const minScore = dimCount * 1;
+        const maxScore = dimCount * 3;
+        const range = maxScore - minScore;
+        if (range === 0) return 'M';
+        const normalized = (score - minScore) / range;
+        if (normalized <= 0.333) return 'L';
+        if (normalized <= 0.666) return 'M';
+        return 'H';
+    }
+    
+    function levelNum(level) { return { L: 1, M: 2, H: 3 }[level]; }
+    function parsePattern(pattern) { return pattern.replace(/-/g, '').split(''); }
+
+    function computeResult() {
+      const rawScores = {}; 
+      const dimCounts = {};
+      const levels = {};
+      
+      Object.keys(dimensionMeta).forEach(dim => { 
+          rawScores[dim] = 0; 
+          dimCounts[dim] = 0;
+      });
+      
+      questions.forEach(q => { 
+          rawScores[q.dim] += Number(app.answers[q.id] || 0); 
+          dimCounts[q.dim] += 1;
+      });
+      
+      Object.entries(rawScores).forEach(([dim, score]) => { 
+          levels[dim] = sumToLevel(score, dimCounts[dim]); 
+      });
+
+      const userVector = dimensionOrder.map(dim => levelNum(levels[dim]));
+      const ranked = NORMAL_TYPES.map(type => {
+        const vector = parsePattern(type.pattern).map(levelNum);
+        let distance = 0, exact = 0;
+        for (let i = 0; i < vector.length; i++) {
+          const diff = Math.abs(userVector[i] - vector[i]);
+          distance += diff;
+          if (diff === 0) exact += 1;
+        }
+        const similarity = Math.max(0, Math.round((1 - distance / 30) * 100));
+        return { ...type, ...TYPE_LIBRARY[type.code], distance, exact, similarity };
+      }).sort((a, b) => {
+        if (a.distance !== b.distance) return a.distance - b.distance;
+        if (b.exact !== a.exact) return b.exact - a.exact;
+        return b.similarity - a.similarity;
+      });
+
+      const bestNormal = ranked[0];
+      const isLagTriggered = app.answers['lag_gate_q2'] === 2;
+
+      let finalType, modeKicker = '你的隐藏副面', badge = `相似度 ${bestNormal.similarity}%`, sub = '大数据已成功解析你最真实的心理图谱。';
+      
+      if (isLagTriggered) {
+        finalType = TYPE_LIBRARY.DRUNK; // Mapping DRUNK to Lag/Death Survivor
+        modeKicker = '特殊隐藏结局触发';
+        badge = '匹配度 100% · 社死基因完全觉醒';
+        sub = '由于你经历了毁天灭地的社死事件，常规人格防线已全面崩溃。';
+      } else if (bestNormal.similarity < 60) {
+        finalType = TYPE_LIBRARY.HHHH;
+        modeKicker = '异常人格收容所';
+        badge = `最高匹配仅 ${bestNormal.similarity}%`;
+        sub = '你的脑回路过于清奇，正常人类分类学已无法定义你。';
+      } else {
+        finalType = bestNormal;
+      }
+      return { rawScores, levels, finalType, modeKicker, badge, sub };
+    }
+
+    function renderResult() {
+      const result = computeResult();
+      const type = result.finalType;
+
+      document.getElementById('resultModeKicker').textContent = result.modeKicker;
+      document.getElementById('resultTypeName').textContent = `${type.cn}`; // 只显示中文名
+      document.getElementById('matchBadge').textContent = result.badge;
+      document.getElementById('resultTypeSub').textContent = result.sub;
+      document.getElementById('resultDesc').textContent = type.desc;
+      document.getElementById('posterCaption').textContent = type.intro;
+      document.getElementById('posterEmoji').textContent = type.emoji || "✨";
+
+      const dimList = document.getElementById('dimList');
+      dimList.innerHTML = dimensionOrder.map(dim => {
+        const level = result.levels[dim];
+        return `
+          <div class="dim-item">
+            <div class="dim-item-top">
+              <div class="dim-item-name">${dimensionMeta[dim].name}</div>
+              <div class="dim-item-score">${level} 级特征</div>
+            </div>
+            <p>${DIM_EXPLANATIONS[dim][level]}</p>
+          </div>
+        `;
+      }).join('');
+      showScreen('result');
+    }
+
+    function startTest() {
+      app.answers = {};
+      const shuffledRegular = shuffle(questions);
+      const insertIndex = Math.floor(Math.random() * (shuffledRegular.length - 10)) + 5; // 随机插入特殊问题
+      app.shuffledQuestions = [
+        ...shuffledRegular.slice(0, insertIndex),
+        specialQuestions[0],
+        ...shuffledRegular.slice(insertIndex)
+      ];
+      renderQuestions();
+      showScreen('test');
+    }
+
+    document.getElementById('startBtn').addEventListener('click', startTest);
+    document.getElementById('backIntroBtn').addEventListener('click', () => showScreen('intro'));
+    document.getElementById('submitBtn').addEventListener('click', renderResult);
+    document.getElementById('restartBtn').addEventListener('click', startTest);
+    document.getElementById('toTopBtn').addEventListener('click', () => showScreen('intro'));
+  </script>
+</body>
+</html>
