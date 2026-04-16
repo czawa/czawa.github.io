@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MSTI 猫和老鼠人格测试</title>
+  <style>
+    :root {
+      --bg: #fdfaf6;
+      --panel: #ffffff;
+      --text: #2a221e;
+      --muted: #786f6a;
+      --line: #e8dedb;
+      --soft: #f6efed;
+      --accent: #d29d46;
+      --accent-strong: #a56f2b;
+      --shadow: 0 16px 40px rgba(73, 55, 47, 0.08);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(circle at top left, #fffbf8 0, #fdfaf6 36%, #f7f2ed 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 28px;
+      margin-top: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -60px;
+      top: -60px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(210, 157, 70, 0.18), rgba(210, 157, 70, 0.02));
+      pointer-events: none;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 52px);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      max-width: 680px;
+    }
+
+    .hero-minimal {
+      min-height: 48vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 42px 20px;
+    }
+    .hero-minimal h1 { max-width: none; margin: 0; }
+    .hero-actions-single { justify-content: center; margin-top: 28px; }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+      font: inherit;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { cursor: not-allowed; opacity: 0.55; transform: none; }
+
+    .btn-primary {
+      background: var(--accent-strong);
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(165, 111, 43, 0.18);
+      font-weight: 700;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--accent-strong);
+      padding: 14px 20px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      font-weight: 700;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .test-wrap, .result-wrap { margin-top: 22px; padding: 22px; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .progress {
+      flex: 1;
+      min-width: 240px;
+      height: 10px;
+      background: #f3eeed;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress > span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #d29d46, #a56f2b);
+      border-radius: inherit;
+      transition: width .22s ease;
+    }
+
+    .progress-text { color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+    .question-list { display: grid; gap: 16px; }
+    .question {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff, #fdfbfb);
+    }
+    .question-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+    }
+    .question-title { font-size: 16px; line-height: 1.7; white-space: pre-wrap; font-weight: 600;}
+    .options { display: grid; gap: 10px; margin-top: 14px; }
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      transition: border-color .16s ease, background .16s ease, transform .16s ease;
+    }
+    .option:hover { border-color: #d0c1bc; background: #fcf9f8; cursor: pointer; }
+    .option input { margin-top: 3px; accent-color: var(--accent-strong); transform: scale(1.1); flex-shrink: 0; }
+    .option-code { font-weight: 800; color: var(--accent-strong); min-width: 22px; }
+
+    .actions-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      padding-top: 6px;
+    }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.7; }
+
+    .result-layout { display: grid; gap: 18px; }
+    .result-top {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+    .poster-box, .type-box, .analysis-box, .dim-box, .note-box {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff, #fdfbfb);
+    }
+    
+    /* 核心修改：使用纯CSS+Emoji代替图片加载 */
+    .poster-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+      background: radial-gradient(circle at center, rgba(210,157,70,0.15), rgba(210,157,70,0) 60%), linear-gradient(180deg, #ffffff, #fbf8f7);
+      text-align: center;
+    }
+    .poster-emoji {
+      font-size: 80px;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 10px 15px rgba(165, 111, 43, 0.2));
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    .poster-caption { font-size: 16px; font-weight: bold; color: var(--accent-strong); }
+
+    .type-kicker { font-size: 12px; color: var(--accent-strong); margin-bottom: 8px; letter-spacing: .06em; }
+    .type-name { font-size: clamp(30px, 5vw, 48px); line-height: 1.08; letter-spacing: -0.03em; font-weight: 800;}
+    .type-subname { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.8; }
+    .match {
+      margin-top: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      color: var(--accent-strong);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .analysis-box h3, .dim-box h3, .note-box h3 { font-size: 16px; margin-bottom: 12px; }
+    .analysis-box p { margin: 0; color: #403430; font-size: 15px; line-height: 1.9; white-space: pre-wrap; }
+    
+    .dim-list { display: grid; gap: 12px; }
+    .dim-item { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: #fff; }
+    .dim-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+    .dim-item-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .dim-item-score { color: var(--accent-strong); font-weight: 800; font-size: 14px; }
+    .dim-item p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+    .note-box p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+
+    .result-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+
+    @media (max-width: 860px) { .result-top { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) {
+      .shell { padding: 14px 12px 42px; }
+      .hero, .test-wrap, .result-wrap { padding: 16px; }
+      .hero h1 { font-size: 32px; }
+      .question-title { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section id="intro" class="screen active">
+      <div class="hero card hero-minimal">
+        <h1>MBTI已经过时，<br>MSTI (猫鼠指标) 来了。</h1>
+        <div class="hero-actions hero-actions-single">
+          <button id="startBtn" class="btn-primary">开始测试我的猫鼠人格</button>
+        </div>
+        <div style="margin-top: 2rem; color: var(--muted); font-size: 14px;">
+          基于网易手游《猫和老鼠》实战心理学编制的硬核（胡扯）测试。<br>
+          看看你在猫鼠峡谷里，究竟是什么神奇物种。
+        </div>
+      </div>
+    </section>
+
+    <section id="test" class="screen">
+      <div class="test-wrap card">
+        <div class="topbar">
+          <div class="progress"><span id="progressBar"></span></div>
+          <div class="progress-text" id="progressText">0 / 31</div>
+        </div>
+
+        <div id="questionList" class="question-list"></div>
+
+        <div class="actions-bottom">
+          <div class="hint" id="testHint">必须把题做完。就算是秒倒怪，也要有始有终。</div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button id="backIntroBtn" class="btn-secondary">返回首页</button>
+            <button id="submitBtn" class="btn-primary" disabled>提交并查看身份</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="result" class="screen">
+      <div class="result-wrap card">
+        <div class="result-layout">
+          <div class="result-top">
+            <div class="poster-box" id="posterBox">
+              <div id="posterEmoji" class="poster-emoji">🧀</div>
+              <div id="posterCaption" class="poster-caption">猫不抓我我不走</div>
+            </div>
+
+            <div class="type-box">
+              <div class="type-kicker" id="resultModeKicker">你的对局主身份</div>
+              <div class="type-name" id="resultTypeName">CTRL（溜鬼位）</div>
+              <div class="match" id="matchBadge">匹配度 92%</div>
+              <div class="type-subname" id="resultTypeSub">系统备注会显示在这里。</div>
+            </div>
+          </div>
+
+          <div class="analysis-box">
+            <h3>对局人格解析</h3>
+            <p id="resultDesc"></p>
+          </div>
+
+          <div class="dim-box">
+            <h3>猫鼠十五维度评估</h3>
+            <div id="dimList" class="dim-list"></div>
+          </div>
+
+          <div class="note-box">
+            <h3>赛后提示</h3>
+            <p id="funNote">本测试仅供娱乐，无论你是神级车队大腿还是单排天坑，请牢记：游戏是为了开心，别被胜负欲绑架了灵魂。</p>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button id="restartBtn" class="btn-secondary">再测一次</button>
+            <button id="toTopBtn" class="btn-primary">回到首页</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 维度重定义：替换为猫鼠游戏属性
+    const dimensionMeta = {
+      S1: { name: 'S1 溜鬼自信度' },
+      S2: { name: 'S2 角色定位清晰度' },
+      S3: { name: 'S3 胜负欲强弱' },
+      E1: { name: 'E1 队友信任度' },
+      E2: { name: 'E2 救人/奉献意愿' },
+      E3: { name: 'E3 孤狼倾向度' },
+      A1: { name: 'A1 对局善意感知' },
+      A2: { name: 'A2 战术套路死板度' },
+      A3: { name: 'A3 游戏意义感' },
+      Ac1: { name: 'Ac1 推奶酪/击飞动机' },
+      Ac2: { name: 'Ac2 决策果断度' },
+      Ac3: { name: 'Ac3 战术执行力' },
+      So1: { name: 'So1 局内沟通主动性' },
+      So2: { name: 'So2 赛后社交边界感' },
+      So3: { name: 'So3 情绪伪装度' }
+    };
+
+    // 重新编撰的 30 道游戏向题目
+    const questions = [
+      { id: 'q1', dim: 'S1', text: '开局没多久就撞脸猫，你的第一反应是？', options: [ { label: '来得好！看我秦王绕柱秀死他！', value: 3 }, { label: '边跑边找掩体，祈祷别被抓。', value: 2 }, { label: '完了完了，秒倒预定，准备上火箭。', value: 1 } ] },
+      { id: 'q2', dim: 'S1', text: '如果队友秒倒，你觉得接下来猫来追你，你能溜多久？', options: [ { label: '至少能溜出3台奶酪的时间。', value: 3 }, { label: '看地图和道具，随缘溜吧。', value: 2 }, { label: '我可能也撑不过十秒。', value: 1 } ] },
+      { id: 'q3', dim: 'S2', text: '你在游戏组排中，清楚自己的固定位置吗？', options: [ { label: '非常清楚，我就是铁血救人位/主溜鬼位。', value: 3 }, { label: '看阵容补位，啥都能玩点。', value: 2 }, { label: '没什么定位，选个顺眼的随便玩。', value: 1 } ] },
+      { id: 'q4', dim: 'S2', text: '玩猫的时候，你是否有明确的抓捕优先级策略？', options: [ { label: '有，必须先抓破墙快或者救人猛的。', value: 3 }, { label: '大部分时候有，偶尔也会上头死追一个。', value: 2 }, { label: '没有，看到谁在眼前就打谁。', value: 1 } ] },
+      { id: 'q5', dim: 'S3', text: '本来顺风局，结果墙缝期失误被翻盘，你的反应？', options: [ { label: '气得睡不着，立刻保存录像复盘找内鬼。', value: 3 }, { label: '叹口气，吐槽两句，开下一把。', value: 2 }, { label: '无所谓，反正就是个游戏。', value: 1 } ] },
+      { id: 'q6', dim: 'S3', text: '赛季末冲分阶段，你会怎么做？', options: [ { label: '疯狂肝，拿命也得到达目标段位。', value: 3 }, { label: '顺其自然，有空就打打。', value: 2 }, { label: '直接躺平，低段位炸鱼也挺快乐。', value: 1 } ] },
+      { id: 'q7', dim: 'E1', text: '路人队友发快捷消息“我来救人”，你会信他吗？', options: [ { label: '无条件相信，安心修我的奶酪。', value: 3 }, { label: '半信半疑，我会随时准备补位去救。', value: 2 }, { label: '根本不信，路人大概率是去送双杀的。', value: 1 } ] },
+      { id: 'q8', dim: 'E1', text: '单排选人的时候，队友秒锁了一个极其冷门下水道的角色，你会？', options: [ { label: '相信他肯定是绝活哥。', value: 3 }, { label: '点开他战绩看看胜率再决定。', value: 2 }, { label: '心里一凉，完了这把遇到报社的了。', value: 1 } ] },
+      { id: 'q9', dim: 'E2', text: '墙缝只差最后一点，但有个队友被抓上火箭了，你去救吗？', options: [ { label: '必救！同生共死，一个都不能少！', value: 3 }, { label: '看猫守尸严不严，有机会就救。', value: 2 }, { label: '直接卖了，强推墙缝保赢最重要。', value: 1 } ] },
+      { id: 'q10', dim: 'E2', text: '如果你玩的是辅助位（如雪梨），你会把好道具都让给队友吗？', options: [ { label: '毫无保留，隐身药水全给主C。', value: 3 }, { label: '留一点给自己保命，剩下的给队友。', value: 2 }, { label: '我自己先活下来最重要，不让。', value: 1 } ] },
+      { id: 'q11', dim: 'E3', text: '你更喜欢单排还是多排开黑？', options: [ { label: '必须有车队才玩，受不了没交流。', value: 1 }, { label: '都可以，看缘分。', value: 2 }, { label: '只玩单排孤狼，自生自灭最自由。', value: 3 } ] },
+      { id: 'q12', dim: 'E3', text: '玩猫（单打独斗）是不是比玩老鼠（需要配合）更让你觉得自在？', options: [ { label: '是，输赢全靠自己，不用看队友脸色。', value: 3 }, { label: '各有乐趣，换着玩。', value: 2 }, { label: '不是，一个人抓四只太孤独太折磨了。', value: 1 } ] },
+      { id: 'q13', dim: 'A1', text: '遇到对面发“太好玩了”或者转圈圈，你的第一反应？', options: [ { label: '遇到友军了！大家一起开心贴贴。', value: 3 }, { label: '保持警惕，可能是假佛系套路我。', value: 2 }, { label: '管他呢，趁机疯狂刷分刷伤害。', value: 1 } ] },
+      { id: 'q14', dim: 'A1', text: '你觉得这个游戏里的对手大多是抱有什么心态？', options: [ { label: '大家都是来放松娱乐的好兄弟。', value: 3 }, { label: '一半一半吧，有正常人也有暴躁哥。', value: 2 }, { label: '充满了恶意、嘲讽和想看你破防的恶趣味。', value: 1 } ] },
+      { id: 'q15', dim: 'A2', text: '作为猫守尸时，你会严格按照教程放满夹子和道具吗？', options: [ { label: '必须的，苍蝇都飞不进来，严丝合缝。', value: 3 }, { label: '放个夹子意思一下就行了。', value: 2 }, { label: '随心所欲，我看心情甚至可能站远点挂机。', value: 1 } ] },
+      { id: 'q16', dim: 'A2', text: '你喜欢在排位里玩一些奇葩的非主流套路吗？', options: [ { label: '坚决抵制，排位必须按“国家队”标准阵容来。', value: 3 }, { label: '偶尔试试无伤大雅。', value: 2 }, { label: '非常喜欢，赢不赢不重要，快乐就完事了！', value: 1 } ] },
+      { id: 'q17', dim: 'A3', text: '对你来说，打猫鼠的终极意义是什么？', options: [ { label: '上大分，冲刺排行榜，证明硬实力。', value: 3 }, { label: '打发一下无聊的时间。', value: 2 }, { label: '在局内整活，开心快乐最重要。', value: 1 } ] },
+      { id: 'q18', dim: 'A3', text: '如果遭遇了连败，你会怎么想？', options: [ { label: '总结教训，调整战术，再战巅峰！', value: 3 }, { label: '太累了，先退游戏休息一会。', value: 2 }, { label: '怀疑人生，这破游戏一堆机制问题，玩个屁。', value: 1 } ] },
+      { id: 'q19', dim: 'Ac1', text: '正在推最后一块奶酪时，猫已经靠近了，你会？', options: [ { label: '迎难而上，硬吃一刀也要把进度推进去！', value: 3 }, { label: '躲进草丛或者旁边房间观察一波。', value: 2 }, { label: '赶紧溜，换一台奶酪安全最重要。', value: 1 } ] },
+      { id: 'q20', dim: 'Ac1', text: '你残血了，看见前方有大药水，但猫就在附近徘徊，你会？', options: [ { label: '拼了！富贵险中求，冲过去喝！', value: 3 }, { label: '发信号叫个队友来掩护我。', value: 2 }, { label: '算了，苟命要紧，换条路走。', value: 1 } ] },
+      { id: 'q21', dim: 'Ac2', text: '对局开始选角色时，你通常是？', options: [ { label: '秒选绝活/本命角色，绝不犹豫。', value: 3 }, { label: '看队友选什么，我再决定拿什么。', value: 2 }, { label: '选择困难症，倒计时结束前还在纠结换人。', value: 1 } ] },
+      { id: 'q22', dim: 'Ac2', text: '去救队友的时机，你通常把握得如何？', options: [ { label: '果断出击，时间卡得刚刚好。', value: 3 }, { label: '边走边看，有时候会晚一点点。', value: 2 }, { label: '疯狂犹豫去不去，结果队友进度条都过半了。', value: 1 } ] },
+      { id: 'q23', dim: 'Ac3', text: '你赛前立下Flag说今天一定要上段位，通常结果是？', options: [ { label: '说上就上，雷厉风行，不达目的不罢休。', value: 3 }, { label: '断断续续打一下，看运气。', value: 2 }, { label: '永远停留在嘴上，打两把就去看视频了。', value: 1 } ] },
+      { id: 'q24', dim: 'Ac3', text: '在游戏内，你推节奏的紧迫感强吗？', options: [ { label: '极强，不推奶酪/不抓老鼠就像身上长蚂蚁。', value: 3 }, { label: '正常节奏，该干嘛干嘛。', value: 2 }, { label: '不强，经常在地图里逛街、找道具瞎玩。', value: 1 } ] },
+      { id: 'q25', dim: 'So1', text: '局内交流，你通常采用什么方式？', options: [ { label: '积极开麦，指挥全场调度。', value: 3 }, { label: '偶尔打字或者只按快捷发言。', value: 2 }, { label: '全程闭麦，甚至开局就屏蔽队友。', value: 1 } ] },
+      { id: 'q26', dim: 'So1', text: '赛后有陌生人加你好友想拉你双排，你会？', options: [ { label: '欣然接受，多聊几句看看能不能处。', value: 3 }, { label: '先看他上局战绩和历史胜率再决定。', value: 2 }, { label: '高冷拒绝，或者加了也从来不主动邀请。', value: 1 } ] },
+      { id: 'q27', dim: 'So2', text: '如果游戏里有了“固玩”（固定玩伴），你会？', options: [ { label: '只要上线就必须形影不离。', value: 1 }, { label: '正常双排，偶尔也和别人玩。', value: 2 }, { label: '有空就一起，大部分时间还是各玩各的，保持距离。', value: 3 } ] },
+      { id: 'q28', dim: 'So2', text: '你反感游戏里那些不管输赢只顾着互相贴贴的“连体婴”吗？', options: [ { label: '非常反感，严重破坏游戏平衡和体验。', value: 3 }, { label: '无感，他们玩他们的，我玩我的。', value: 2 }, { label: '不反感，甚至觉得他们挺浪漫的。', value: 1 } ] },
+      { id: 'q29', dim: 'So3', text: '被猪队友坑输了，你会？', options: [ { label: '直接开麦或赛后小剧场疯狂输出。', value: 1 }, { label: '发两句阴阳怪气的快捷消息（如“干得漂亮”）。', value: 2 }, { label: '心里MMP，表面一言不发默默退掉队伍。', value: 3 } ] },
+      { id: 'q30', dim: 'So3', text: '你在游戏里展现出的性格，和现实中一样吗？', options: [ { label: '绝对真实，游戏里暴躁现实中也直来直去。', value: 1 }, { label: '一半一半吧，会稍微放飞自我一点。', value: 2 }, { label: '完全是两个人！现实唯唯诺诺，游戏重拳出击（或反之）。', value: 3 } ] }
+    ];
+
+    const specialQuestions = [
+      { id: 'lag_gate_q1', special: true, text: '你打猫鼠排位时，最怕遇到什么？', options: [ { label: '迷之操作的猪队友', value: 1 }, { label: '强到离谱的神仙对手', value: 2 }, { label: '万恶的网络卡顿/460', value: 3 }, { label: '关键时刻手机没电/来电话', value: 4 } ] },
+      { id: 'lag_gate_q2', special: true, text: '对于游戏中的“460延迟”，你的体验是？', options: [ { label: '偶尔卡一下，还能忍受。', value: 1 }, { label: '经常卡成PPT，移形换影，人在家中坐，魂在太空游。', value: 2 } ] }
+    ];
+
+    // 重写27种人格（保持原Key保证逻辑不坏，重写描述与Emoji）
+    const TYPE_LIBRARY = {
+      "CTRL": { code: "CTRL", cn: "究极溜鬼位", emoji: "🐭", intro: "猫咪，来抓我呀！", desc: "恭喜您，您就是传说中的全场节奏带师！当其他人看到猫落荒而逃时，你的DNA却动了。你不仅不跑，还要故意扔个花瓶挑衅。你的走位风骚，能在餐桌下面秀出花来。对你而言，推奶酪太无聊了，游戏唯一的乐趣就是牵制对方。队友最爱你的“我牵制，你们推”，猫咪最恨你那跳跃时的嘲讽音效。" },
+      "ATM-er": { code: "ATM-er", cn: "无情推奶酪机", emoji: "🧀", intro: "别管我，我的眼里只有进度条！", desc: "您是峡谷中最默默无闻的伟大劳模。哪怕队友在隔壁被打得鬼哭狼嚎，只要猫没把刀架在你脖子上，你的手绝不会离开奶酪。你可能溜鬼不行，救人白给，但只要有一丝空隙，你就能把进度条推满。你是胜利的基石，是冰冷的得分机器，偶尔会被队友吐槽太怂，但赛后结算的推奶酪MVP永远是你。" },
+      "Dior-s": { code: "Dior-s", cn: "战术苟命鼠", emoji: "🙈", intro: "看不见我看不见我看不见我...", desc: "苟，是一种大智慧。当你意识到自己溜不过猫、修机又慢时，你果断选择了成为一名“环境融和大师”。一局游戏10分钟，你有8分钟躲在木桶里、草丛里或床底下。你不送人头，就是对团队最大的贡献。虽然结算评分可能低得可怜，但你总能以满血状态活到墙缝期，成为压死骆驼的最后一根稻草。" },
+      "BOSS": { code: "BOSS", cn: "霸道猫咪", emoji: "🐱", intro: "这个房间，我说了算。", desc: "你是统治全局的王者。玩猫对于你来说不是娱乐，而是一场冷酷的狩猎收网行动。你会精密计算每个老鼠的复活时间、奶酪进度和道具位置。你的防守密不透风，夹子放得让老鼠绝望。你最享受的就是把最后一只老鼠绑上火箭时，屏幕跳出“大获全胜”的那份孤独与荣耀。" },
+      "THAN-K": { code: "THAN-K", cn: "天使救人位", emoji: "👼", intro: "别怕，我马上到！", desc: "峡谷里的活菩萨！只要队友被抓，哪怕你是残血，哪怕对面是放满夹子的黑猫，你也会义无反顾地冲上去。你可能经常因为救人把自己搭进去，导致“葫芦娃救爷爷”，但你的游戏精神极其高尚。有你在的队伍，永远充满温情，你用实际行动证明了什么叫“不抛弃，不放弃”。" },
+      "OH-NO": { code: "OH-NO", cn: "惊恐秒倒怪", emoji: "😱", intro: "啊啊啊猫来了！我没了！", desc: "你的游戏体验通常只有前三十秒是完整的。一旦BGM变紧凑，你的心跳就会飙升到180，手指开始不听使唤。哪怕猫只是路过，你都能吓得自己撞到墙上。你的存活时间取决于猫什么时候发现你。虽然你是突破口，但你那滑稽的挣扎和惨叫，往往能给这冰冷的游戏带来一丝喜剧色彩。" },
+      "GOGO": { code: "GOGO", cn: "速推狂魔", emoji: "🚀", intro: "别墨迹，搞快点！", desc: "你的游戏哲学只有一个字：快！你受不了队友逛街，受不了慢吞吞的战术。你的座右铭是“大力出奇迹，一波推到底”。不管三七二十一，扛起奶酪就是塞。墙缝一开，果盘道具全往上砸。你赢的时候风卷残云，输的时候也干脆利落，绝不拖泥带水打膀胱局。" },
+      "SEXY": { code: "SEXY", cn: "暖暖外观党", emoji: "👗", intro: "输赢无所谓，时装必须美。", desc: "别人在研究怎么配卡，你在研究怎么搭衣服。你的战绩可能惨不忍睹，但你的衣柜绝对豪华无比。S级皮肤、绝版特效、专属头像框一应俱全。每局开场，你必须先发个带有酷炫特效的表情。对你来说，《猫和老鼠》不是竞技游戏，而是走秀模拟器，只要自己死的时候特效够好看，这局就不算输。" },
+      "LOVE-R": { code: "LOVE-R", cn: "峡谷连体婴", emoji: "💕", intro: "你去哪，我去哪~", desc: "单排？不存在的。对你而言，游戏只是和CP增进感情的聊天室补充包。局内你们形影不离，一起推奶酪，一起扔花瓶，甚至要死也要死在同一个火箭上。你们的浪漫让猫咪看了想打人，让单排队友看了想退游戏。你们用爱发电，在残酷的猫鼠大战中硬生生演出了偶像剧。" },
+      "MUM": { code: "MUM", cn: "全职保姆", emoji: "🍼", intro: "喝口药水吧孩子，别乱跑了。", desc: "你是全队操碎了心的老母亲。玩个辅助位，全图捡药水、攒冰块，然后追着残血队友喂。队友浪了你得掩护，队友倒了你得去扶。你没有输出，也不抢风头，唯一的愿望就是这群熊孩子能平平安安地顺着老鼠洞逃走。峡谷欠你一面“感动猫鼠十大人物”的锦旗。" },
+      "FAKE": { code: "FAKE", cn: "顶级演员", emoji: "🎭", intro: "别骂了别骂了，我尽力了(装的)。", desc: "你是敌方派来的卧底，是队友心中的内鬼。表面上你在辛勤修机，实际上你不小心引爆了鞭炮炸晕了队友；表面上你去救人，实际上你当着猫的面踩了夹子。你有着奥斯卡级别的演技，总能在关键时刻出现“致命失误”。没人知道你是真的菜，还是故意在搞心态。" },
+      "OJBK": { code: "OJBK", cn: "佛系玩家", emoji: "🍵", intro: "一切随缘，爱咋咋地。", desc: "胜负心？早没了。被猫追上了？不跑了，原地发个投降表情。队友掉线了？无所谓，我推我的机。墙缝开了？爱走不走，我先钻了。你的情绪极度稳定，看破红尘，哪怕经历了十连败，你也能平静地端起水杯喝一口。你是这浮躁峡谷中最清流的存在。" },
+      "MALO": { code: "MALO", cn: "整活猴子", emoji: "🐒", intro: "看我给你表演个杂技！", desc: "上分？不存在的。你的脑子里装满了各种奇葩套路和《B站高能集锦》。什么核弹流、飞天流、无限控制流，你都在实战中一一尝试。你不仅折磨对手，有时候连队友也一起折磨。有你在的局，胜率不一定高，但节目效果绝对拉满，录下来发网上的播放量绝对不低。" },
+      "JOKE-R": { code: "JOKE-R", cn: "欢乐守尸猫", emoji: "🤡", intro: "不着急，我们慢慢玩。", desc: "当你作为猫抓住老鼠后，真正的游戏才刚刚开始。你不会立刻把他绑上火箭，而是放出来，等他跑两步再抓回来；或者在火箭旁边摆满各种奇怪的道具。你喜欢看猎物挣扎求生的样子，享受掌控雷电的快感。你是有些变态的小丑，带给老鼠们挥之不去的心理阴影。" },
+      "WOC!": { code: "WOC!", cn: "一惊一乍怪", emoji: "🗯️", intro: "卧槽！他在哪！他怎么过来的！", desc: "只要你在麦上，队友就需要调低音量。你的声带连接着局内的每一个突发事件。踩夹子了“卧槽！”，被隐身猫打了“卧槽！”，救人成功了“牛逼！”。你是全队的移动警报器和啦啦队，虽然技术不一定顶尖，但你的情绪价值和临场氛围烘托绝对是满分。" },
+      "THIN-K": { code: "THIN-K", cn: "泉水指挥官", emoji: "🧠", intro: "听我指挥，这波优势在我！", desc: "你是战术大师，是数据的化身。你背熟了所有角色的技能CD，对地图的刷新点倒背如流。虽然你可能手残跑不掉，但你的麦克风里永远在进行宏观调控：“猫去卧室了，客厅安全抓紧推”、“别管我，卡血线再救”。队友如果不听指挥，你会比被放飞还要难受。" },
+      "SHIT": { code: "SHIT", cn: "暴躁压力怪", emoji: "💢", intro: "会不会玩？没长手吗？！", desc: "峡谷猎马人就是你。对局不顺时，你的键盘和麦克风就成了你的武器。你不能接受任何失误，队友秒倒你要喷，救人不及时你要喷，甚至队友选的皮肤丑你都要喷两句。你对胜利有着偏执的渴望，但往往这种强烈的压迫感反而会让队友更加紧张导致操作变形。消消气吧老哥！" },
+      "ZZZZ": { code: "ZZZZ", cn: "梦游挂机者", emoji: "💤", intro: "啊？刚才发生什么了？", desc: "你的网络可能没断，但你的灵魂经常断线。开局前30秒，你必定停在原地一动不动。对局中，你也常常发呆，被猫打了才猛然惊醒。你可能是一边吃零食一边玩，或者是在上课偷偷摸鱼。你的状态就像一个永远睡不醒的树懒，能在这个高强度竞技游戏中活下来纯属奇迹。" },
+      "POOR": { code: "POOR", cn: "零充豹子头", emoji: "💸", intro: "首充？不可能的。", desc: "只要不花钱，就没有什么能割到我的韭菜！你靠着白嫖来的体验卡和基础角色打天下。面对满屏幕穿着华丽特效皮肤的大佬，你不屑一顾，坚信“操作才是唯一的真理”。每次出新氪金活动你都冷眼旁观，偶尔用攒了半年的金币买个打折角色，能让你开心一整周。" },
+      "MONK": { code: "MONK", cn: "孤狼单排王", emoji: "🐺", intro: "我不需要队友，我自己可以。", desc: "排位机制的受害者，单排路上的苦行僧。你经历了太多路人局的折磨，已经不再对队友抱有任何幻想。你习惯了自己救自己，自己推奶酪，自己砸墙缝。当队友在语音里大喊大叫时，你已经默默完成了绝地翻盘。你不需要交流，你的背影就是最可靠的保障。" },
+      "IMSB": { code: "IMSB", cn: "迷惑白给侠", emoji: "😵", intro: "我寻思这波能反杀的...", desc: "你的操作总是充满了令人窒息的迷惑感。满血去救人，结果自己被猫平A加技能瞬间双杀；扔个炸药包想炸猫，结果把全队全炸翻。你不是故意的，你是真的觉得自己的操作没有问题，只是每次运气都不站在你这边。队友看你的视角，就像在看一部灾难纪录片。" },
+      "SOLO": { code: "SOLO", cn: "落单自闭鼠", emoji: "🚪", intro: "别管我，让我一个人待着。", desc: "你不喜欢扎堆。别人都在客厅火拼，你偏要一个人躲在阁楼慢慢摸道具。如果队友跑来找你，你会觉得他们把猫引来了，立刻转移阵地。你享受这种避开人群的宁静感，偶尔顺手推个奶酪。当队伍团灭时，猫可能还要花两分钟在某个阴暗的角落里才能找到你。" },
+      "FUCK": { code: "FUCK", cn: "彻底破防人", emoji: "💥", intro: "我不玩了！！！退游！！！", desc: "恭喜，你已经到达了心态的临界点！连续的被针对、460网络、猪队友，终于让你那根紧绷的神经彻底断裂。你会愤怒地摔掉手机，疯狂点击“卸载游戏”，并在心里发誓这辈子再也不碰这个破游戏。然后...两天后，你又默默去应用商店把它下载了回来。真实。" },
+      "DEAD": { code: "DEAD", cn: "心累退坑边缘", emoji: "🥀", intro: "累了，毁灭吧，没意思。", desc: "你已经失去了对这款游戏的激情。曾经为了上段位熬夜奋战的你，现在看着满屏的活动和红点只觉得疲惫。你上线只是为了清一下日常，甚至连排位都不想点开，只能在休闲模式里漫无目的地走走停停。你随时都有可能永远离开这个峡谷，只留下一堆落灰的绝版皮肤。" },
+      "IMFW": { code: "IMFW", cn: "求带躺咸鱼", emoji: "🐟", intro: "大佬带带我！我给你喊666！", desc: "能躺着赢，为什么要站着C？你的终极技能是“抱大腿”。你非常清楚自己的技术水平，所以你绝不逞强，安心当好一个跟班。大佬去哪你去哪，大佬修机你放风，大佬被抓你...你赶紧跑。只要大腿够粗，你就能一路混上车王。这也是一种稀缺的生存智慧！" },
+      "HHHH": { code: "HHHH", cn: "究极乐子人", emoji: "🤣", intro: "哈哈哈哈打不过就加入！", desc: "系统无法识别你的逻辑，因为你根本就没有逻辑！你玩游戏纯粹是为了找乐子。不管是被猫抓了，还是队友空大了，你都只能发出“哈哈哈哈哈”的狂笑。输赢对你来说就像一团空气。能用这样神奇的心态在这个高血压游戏里存活，你绝对是超脱三界之外的神仙。" },
+      "DRUNK": { code: "DRUNK", cn: "460 网络延迟怪", emoji: "📶", intro: "我在哪？猫在哪？我在推什么？", desc: "警告！你的网络状态已接管了你的人格！无论你技术多好，意识多强，在万恶的“460ms”面前都不堪一击。你经常看到队友在原地鬼畜，猫咪瞬移到你脸上。你的游戏画面像是一部卡顿的老电影，你的每一波操作都带着玄学色彩。换个路由器吧朋友，别在峡谷里受折磨了！" }
+    };
+
+    // 重新编撰的 15维度解析
+    const DIM_EXPLANATIONS = {
+      S1: { L: "对自己技术极度不自信，见猫就腿软。", M: "顺风局敢秀，逆风局秒怂，状态看天意。", H: "拥有迷之自信，坚信自己能溜猫一百年。" },
+      S2: { L: "打法混乱，经常玩辅助却想着去秀操作。", M: "能认清自己定位，偶尔也会忍不住浪一把。", H: "铁血分工，深知自己该干嘛，绝不越界操作。" },
+      S3: { L: "输赢全看淡，快乐最重要，佛系本佛。", M: "想赢，但如果真的尽力了输掉也能接受。", H: "把把都要上分，输一局能气得三天睡不着觉。" },
+      E1: { L: "全员皆内鬼，根本不相信路人队友能干人事。", M: "会配合队友，但心里随时做好了被坑的准备。", H: "绝对信任，队友发撤退马上走，发救人立刻让。" },
+      E2: { L: "大难临头各自飞，死道友不死贫道，苟住最重要。", M: "在保证自己安全的前提下，愿意去救人或辅助。", H: "奉献型人格，随时准备牺牲自己保全大局主C。" },
+      E3: { L: "极其依赖车队配合，没沟通就不会玩游戏了。", M: "能适应团队，一个人单干的时候也不至于抓瞎。", H: "孤狼之王，觉得队友只会影响我拔刀的速度。" },
+      A1: { L: "总觉得对面在嘲讽，满怀敌意地对待每一次互动。", M: "保持理智观望，不轻易嘲讽，也不轻易相信套路。", H: "坚信大家都是友好的玩家，遇到转圈必定热情回应。" },
+      A2: { L: "套路就是用来打破的，怎么快乐怎么点技能。", M: "该按部就班时听指挥，偶尔尝试小套路整活。", H: "死磕“国家队”阵容和最优化开局，无法忍受非主流。" },
+      A3: { L: "觉得打排位毫无意义，纯粹消磨时间或者为了社交。", M: "有上分目标，但如果连败了也会果断放弃去摆烂。", H: "将游戏段位视为自我价值体现的一部分，极度认真。" },
+      Ac1: { L: "看到猫的影子就立刻丢下手头的工作逃跑避险。", M: "权衡利弊，觉得能顶着猫的压力推进就会试一试。", H: "强烈的推进欲，哪怕硬扛一刀也要把奶酪塞进去。" },
+      Ac2: { L: "犹犹豫豫，救人卡半血，选人卡最后三秒。", M: "正常做决定，遇到复杂情况会稍微思考一下。", H: "雷厉风行，不假思索，哪怕是错误的决定也做得极快。" },
+      Ac3: { L: "嘴上喊着冲冲冲，实战里经常逛街发呆找不着北。", M: "执行力一般，基本能完成队友交代的任务。", H: "战术执行极其到位，指哪打哪，毫无拖泥带水。" },
+      So1: { L: "绝对闭麦自闭症患者，游戏内的沟通键都不想按。", M: "必要时会发发快捷消息，有人问话也会打字回。", H: "社交牛逼症，开局先语音问好，全场指挥不停歇。" },
+      So2: { L: "打得好就想加好友锁CP，极其渴望在游戏里找固玩。", M: "看缘分加好友，能聊得来就多玩，聊不来就删。", H: "打完就走，拒绝加好友，极度保护自己的独处边界。" },
+      So3: { L: "直肠子，遇到坑比直接开喷，真实情绪零伪装。", M: "会收敛一点，最多阴阳怪气两句，保留最后体面。", H: "极致伪装，内心已经气炸了，表面还在发“没关系”。" }
+    };
+
+    const dimensionOrder = ['S1','S2','S3','E1','E2','E3','A1','A2','A3','Ac1','Ac2','Ac3','So1','So2','So3'];
+    const NORMAL_TYPES = [
+      { code: "CTRL", pattern: "HHH-HMH-MHH-HHH-MHM" },
+      { code: "ATM-er", pattern: "HHH-HHM-HHH-HMH-MHL" },
+      { code: "Dior-s", pattern: "MHM-MMH-MHM-HMH-LHL" },
+      { code: "BOSS", pattern: "HHH-HMH-MMH-HHH-LHL" },
+      { code: "THAN-K", pattern: "MHM-HMM-HHM-MMH-MHL" },
+      { code: "OH-NO", pattern: "HHL-LMH-LHH-HHM-LHL" },
+      { code: "GOGO", pattern: "HHM-HMH-MMH-HHH-MHM" },
+      { code: "SEXY", pattern: "HMH-HHL-HMM-HMM-HLH" },
+      { code: "LOVE-R", pattern: "MLH-LHL-HLH-MLM-MLH" },
+      { code: "MUM", pattern: "MMH-MHL-HMM-LMM-HLL" },
+      { code: "FAKE", pattern: "HLM-MML-MLM-MLM-HLH" },
+      { code: "OJBK", pattern: "MMH-MMM-HML-LMM-MML" },
+      { code: "MALO", pattern: "MLH-MHM-MLH-MLH-LMH" },
+      { code: "JOKE-R", pattern: "LLH-LHL-LML-LLL-MLM" },
+      { code: "WOC!", pattern: "HHL-HMH-MMH-HHM-LHH" },
+      { code: "THIN-K", pattern: "HHL-HMH-MLH-MHM-LHH" },
+      { code: "SHIT", pattern: "HHL-HLH-LMM-HHM-LHH" },
+      { code: "ZZZZ", pattern: "MHL-MLH-LML-MML-LHM" },
+      { code: "POOR", pattern: "HHL-MLH-LMH-HHH-LHL" },
+      { code: "MONK", pattern: "HHL-LLH-LLM-MML-LHM" },
+      { code: "IMSB", pattern: "LLM-LMM-LLL-LLL-MLM" },
+      { code: "SOLO", pattern: "LML-LLH-LHL-LML-LHM" },
+      { code: "FUCK", pattern: "MLL-LHL-LLM-MLL-HLH" },
+      { code: "DEAD", pattern: "LLL-LLM-LML-LLL-LHM" },
+      { code: "IMFW", pattern: "LLH-LHL-LML-LLL-MLL" }
+    ];
+
+    const app = { shuffledQuestions: [], answers: {}, previewMode: false };
+    const screens = { intro: document.getElementById('intro'), test: document.getElementById('test'), result: document.getElementById('result') };
+    const questionList = document.getElementById('questionList');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const submitBtn = document.getElementById('submitBtn');
+    const testHint = document.getElementById('testHint');
+
+    function showScreen(name) {
+      Object.entries(screens).forEach(([key, el]) => { el.classList.toggle('active', key === name); });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function getVisibleQuestions() {
+      const visible = [...app.shuffledQuestions];
+      const gateIndex = visible.findIndex(q => q.id === 'lag_gate_q1');
+      if (gateIndex !== -1 && app.answers['lag_gate_q1'] === 3) {
+        visible.splice(gateIndex + 1, 0, specialQuestions[1]);
+      }
+      return visible;
+    }
+
+    function renderQuestions() {
+      const visibleQuestions = getVisibleQuestions();
+      questionList.innerHTML = '';
+      visibleQuestions.forEach((q, index) => {
+        const card = document.createElement('article');
+        card.className = 'question';
+        card.innerHTML = `
+          <div class="question-meta">
+            <div class="badge">第 ${index + 1} 题</div>
+            <div>${q.special ? '游戏特供题' : '猫鼠维度题'}</div>
+          </div>
+          <div class="question-title">${q.text}</div>
+          <div class="options">
+            ${q.options.map((opt, i) => {
+              const code = ['A', 'B', 'C', 'D'][i] || String(i + 1);
+              const checked = app.answers[q.id] === opt.value ? 'checked' : '';
+              return `
+                <label class="option">
+                  <input type="radio" name="${q.id}" value="${opt.value}" ${checked} />
+                  <div class="option-code">${code}</div>
+                  <div>${opt.label}</div>
+                </label>
+              `;
+            }).join('')}
+          </div>
+        `;
+        questionList.appendChild(card);
+      });
+
+      questionList.querySelectorAll('input[type="radio"]').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const { name, value } = e.target;
+          app.answers[name] = Number(value);
+          if (name === 'lag_gate_q1') {
+            if (Number(value) !== 3) delete app.answers['lag_gate_q2'];
+            renderQuestions();
+            return;
+          }
+          updateProgress();
+        });
+      });
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const visibleQuestions = getVisibleQuestions();
+      const total = visibleQuestions.length;
+      const done = visibleQuestions.filter(q => app.answers[q.id] !== undefined).length;
+      const percent = total ? (done / total) * 100 : 0;
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = `${done} / ${total}`;
+      const complete = done === total && total > 0;
+      submitBtn.disabled = !complete;
+      testHint.textContent = complete ? '检测完毕。准备好直面你在峡谷里的真实嘴脸了吗？' : '想上分就得稳重，把题做完再提交。';
+    }
+
+    function sumToLevel(score) { if (score <= 3) return 'L'; if (score === 4) return 'M'; return 'H'; }
+    function levelNum(level) { return { L: 1, M: 2, H: 3 }[level]; }
+    function parsePattern(pattern) { return pattern.replace(/-/g, '').split(''); }
+
+    function computeResult() {
+      const rawScores = {}; const levels = {};
+      Object.keys(dimensionMeta).forEach(dim => { rawScores[dim] = 0; });
+      questions.forEach(q => { rawScores[q.dim] += Number(app.answers[q.id] || 0); });
+      Object.entries(rawScores).forEach(([dim, score]) => { levels[dim] = sumToLevel(score); });
+
+      const userVector = dimensionOrder.map(dim => levelNum(levels[dim]));
+      const ranked = NORMAL_TYPES.map(type => {
+        const vector = parsePattern(type.pattern).map(levelNum);
+        let distance = 0, exact = 0;
+        for (let i = 0; i < vector.length; i++) {
+          const diff = Math.abs(userVector[i] - vector[i]);
+          distance += diff;
+          if (diff === 0) exact += 1;
+        }
+        const similarity = Math.max(0, Math.round((1 - distance / 30) * 100));
+        return { ...type, ...TYPE_LIBRARY[type.code], distance, exact, similarity };
+      }).sort((a, b) => {
+        if (a.distance !== b.distance) return a.distance - b.distance;
+        if (b.exact !== a.exact) return b.exact - a.exact;
+        return b.similarity - a.similarity;
+      });
+
+      const bestNormal = ranked[0];
+      const isLagTriggered = app.answers['lag_gate_q2'] === 2;
+
+      let finalType, modeKicker = '对局主定位', badge = `匹配度 ${bestNormal.similarity}%`, sub = '精准雷达已锁定你在峡谷中的真实地位。';
+      
+      if (isLagTriggered) {
+        finalType = TYPE_LIBRARY.DRUNK; // Mapping DRUNK to LAG
+        modeKicker = '网络异常已被接管';
+        badge = '匹配度 100% · 460延迟因子超标';
+        sub = '你的网络环境过于恶劣，常规人格已被强行覆盖。';
+      } else if (bestNormal.similarity < 60) {
+        finalType = TYPE_LIBRARY.HHHH;
+        modeKicker = '系统强制发配';
+        badge = `最高匹配仅 ${bestNormal.similarity}%`;
+        sub = '你的游戏脑回路过于新奇，查无此鼠，只能把你归入乐子人。';
+      } else {
+        finalType = bestNormal;
+      }
+      return { rawScores, levels, finalType, modeKicker, badge, sub };
+    }
+
+    function renderResult() {
+      const result = computeResult();
+      const type = result.finalType;
+
+      document.getElementById('resultModeKicker').textContent = result.modeKicker;
+      document.getElementById('resultTypeName').textContent = `${type.code}（${type.cn}）`;
+      document.getElementById('matchBadge').textContent = result.badge;
+      document.getElementById('resultTypeSub').textContent = result.sub;
+      document.getElementById('resultDesc').textContent = type.desc;
+      document.getElementById('posterCaption').textContent = type.intro;
+      document.getElementById('posterEmoji').textContent = type.emoji || "🎮";
+
+      const dimList = document.getElementById('dimList');
+      dimList.innerHTML = dimensionOrder.map(dim => {
+        const level = result.levels[dim];
+        return `
+          <div class="dim-item">
+            <div class="dim-item-top">
+              <div class="dim-item-name">${dimensionMeta[dim].name}</div>
+              <div class="dim-item-score">${level} 级评分</div>
+            </div>
+            <p>${DIM_EXPLANATIONS[dim][level]}</p>
+          </div>
+        `;
+      }).join('');
+      showScreen('result');
+    }
+
+    function startTest() {
+      app.answers = {};
+      const shuffledRegular = shuffle(questions);
+      const insertIndex = Math.floor(Math.random() * shuffledRegular.length) + 1;
+      app.shuffledQuestions = [
+        ...shuffledRegular.slice(0, insertIndex),
+        specialQuestions[0],
+        ...shuffledRegular.slice(insertIndex)
+      ];
+      renderQuestions();
+      showScreen('test');
+    }
+
+    document.getElementById('startBtn').addEventListener('click', startTest);
+    document.getElementById('backIntroBtn').addEventListener('click', () => showScreen('intro'));
+    document.getElementById('submitBtn').addEventListener('click', renderResult);
+    document.getElementById('restartBtn').addEventListener('click', startTest);
+    document.getElementById('toTopBtn').addEventListener('click', () => showScreen('intro'));
+  </script>
+</body>
+</html>
