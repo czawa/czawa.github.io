@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLTI 萌系属性羁绊测试</title>
+  <style>
+    :root {
+      --bg: #fff5f7;
+      --panel: #ffffff;
+      --text: #3a2e32;
+      --muted: #8a7a80;
+      --line: #fce3e9;
+      --soft: #fcf0f3;
+      --accent: #ff85a2;
+      --accent-strong: #ff4d79;
+      --shadow: 0 16px 40px rgba(255, 77, 121, 0.08);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(circle at top left, #fffbfb 0, #fff5f7 36%, #fcedf0 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 28px;
+      margin-top: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -60px;
+      top: -60px;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(255, 133, 162, 0.15), rgba(255, 133, 162, 0.02));
+      pointer-events: none;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      max-width: 680px;
+      color: var(--accent-strong);
+    }
+
+    .hero-minimal {
+      min-height: 48vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 42px 20px;
+    }
+    .hero-minimal h1 { max-width: none; margin: 0; }
+    .hero-actions-single { justify-content: center; margin-top: 28px; }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+      font: inherit;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { cursor: not-allowed; opacity: 0.55; transform: none; }
+
+    .btn-primary {
+      background: var(--accent-strong);
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(255, 77, 121, 0.2);
+      font-weight: 700;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--accent-strong);
+      padding: 14px 20px;
+      border-radius: 14px;
+      border: 1px solid var(--accent);
+      font-weight: 700;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .test-wrap, .result-wrap { margin-top: 22px; padding: 22px; }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .progress {
+      flex: 1;
+      min-width: 240px;
+      height: 10px;
+      background: #fcedf0;
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress > span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #ff85a2, #ff4d79);
+      border-radius: inherit;
+      transition: width .22s ease;
+    }
+
+    .progress-text { color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+    .question-list { display: grid; gap: 16px; }
+    .question {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff, #fffcfd);
+    }
+    .question-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+    }
+    .question-title { font-size: 16px; line-height: 1.7; white-space: pre-wrap; font-weight: 600;}
+    .options { display: grid; gap: 10px; margin-top: 14px; }
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      transition: border-color .16s ease, background .16s ease, transform .16s ease;
+    }
+    .option:hover { border-color: var(--accent); background: #fffcfd; cursor: pointer; }
+    .option input { margin-top: 3px; accent-color: var(--accent-strong); transform: scale(1.1); flex-shrink: 0; }
+    .option-code { font-weight: 800; color: var(--accent-strong); min-width: 22px; }
+
+    .actions-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      padding-top: 6px;
+    }
+    .hint { color: var(--muted); font-size: 13px; line-height: 1.7; }
+
+    .result-layout { display: grid; gap: 18px; }
+    .result-top {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+    .poster-box, .type-box, .analysis-box, .dim-box, .note-box {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, #ffffff, #fffcfd);
+    }
+    
+    .poster-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+      background: radial-gradient(circle at center, rgba(255,133,162,0.15), rgba(255,133,162,0) 60%), linear-gradient(180deg, #ffffff, #fcfafb);
+      text-align: center;
+    }
+    .poster-emoji {
+      font-size: 80px;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 10px 15px rgba(255, 77, 121, 0.2));
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    .poster-caption { font-size: 16px; font-weight: bold; color: var(--accent-strong); }
+
+    .type-kicker { font-size: 12px; color: var(--accent-strong); margin-bottom: 8px; letter-spacing: .06em; }
+    .type-name { font-size: clamp(28px, 5vw, 44px); line-height: 1.08; letter-spacing: -0.03em; font-weight: 800;}
+    .type-subname { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.8; }
+    .match {
+      margin-top: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      color: var(--accent-strong);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .analysis-box h3, .dim-box h3, .note-box h3 { font-size: 16px; margin-bottom: 12px; }
+    .analysis-box p { margin: 0; color: #403430; font-size: 15px; line-height: 1.9; white-space: pre-wrap; }
+    
+    .dim-list { display: grid; gap: 12px; }
+    .dim-item { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: #fff; }
+    .dim-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+    .dim-item-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .dim-item-score { color: var(--accent-strong); font-weight: 800; font-size: 14px; }
+    .dim-item p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+    .note-box p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+
+    .result-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+
+    @media (max-width: 860px) { .result-top { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) {
+      .shell { padding: 14px 12px 42px; }
+      .hero, .test-wrap, .result-wrap { padding: 16px; }
+      .hero h1 { font-size: 32px; }
+      .question-title { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section id="intro" class="screen active">
+      <div class="hero card hero-minimal">
+        <h1>LLTI <br> 二次元萌系羁绊测试</h1>
+        <div class="hero-actions hero-actions-single">
+          <button id="startBtn" class="btn-primary">启动核心系统 (Link Start!)</button>
+        </div>
+        <div style="margin-top: 2rem; color: var(--muted); font-size: 14px; line-height: 1.6;">
+          在浩瀚的二次元宇宙中，命中注定与你相遇的那个“她”，究竟是什么属性？<br>
+          本测试包含 40 道灵魂拷问，将精准定位你的 xp (划掉) 萌系偏好雷达。
+        </div>
+      </div>
+    </section>
+
+    <section id="test" class="screen">
+      <div class="test-wrap card">
+        <div class="topbar">
+          <div class="progress"><span id="progressBar"></span></div>
+          <div class="progress-text" id="progressText">0 / 41</div>
+        </div>
+
+        <div id="questionList" class="question-list"></div>
+
+        <div class="actions-bottom">
+          <div class="hint" id="testHint">诚实作答，不要掩饰你内心的真实想法。</div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button id="backIntroBtn" class="btn-secondary">返回首页</button>
+            <button id="submitBtn" class="btn-primary" disabled>查看我的羁绊对象</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="result" class="screen">
+      <div class="result-wrap card">
+        <div class="result-layout">
+          <div class="result-top">
+            <div class="poster-box" id="posterBox">
+              <div id="posterEmoji" class="poster-emoji">✨</div>
+              <div id="posterCaption" class="poster-caption">...加载中...</div>
+            </div>
+
+            <div class="type-box">
+              <div class="type-kicker" id="resultModeKicker">你的命中注定之魂</div>
+              <div class="type-name" id="resultTypeName">分析中...</div>
+              <div class="match" id="matchBadge">匹配度 0%</div>
+              <div class="type-subname" id="resultTypeSub"></div>
+            </div>
+          </div>
+
+          <div class="analysis-box">
+            <h3>羁绊档案解析</h3>
+            <p id="resultDesc"></p>
+          </div>
+
+          <div class="dim-box">
+            <h3>核心XP十维度雷达图</h3>
+            <div id="dimList" class="dim-list"></div>
+          </div>
+
+          <div class="note-box">
+            <h3>观测者日志</h3>
+            <p id="funNote">二次元没有背叛，保护好那份纯真的笑容。本测试纯属娱乐，如果在现实中遇到了，请务必报警或者送她回家。</p>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button id="restartBtn" class="btn-secondary">重新洗牌命运</button>
+            <button id="toTopBtn" class="btn-primary">回到首页</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 10 核心维度：每维度4题
+    const dimensionMeta = {
+      P_Tsu: { name: '坦率 vs 傲娇' },
+      P_Kuu: { name: '元气 vs 三无' },
+      P_Mat: { name: '稚气 vs 早熟/腹黑' },
+      A_Kemo: { name: '人类 vs 异种族' },
+      A_Goth: { name: '日常装 vs 华丽洋装' },
+      I_Dep: { name: '独立自主 vs 极度粘人' },
+      I_Dom: { name: '乖巧顺从 vs 调戏主导' },
+      I_Pro: { name: '需要保护 vs 战力爆表' },
+      S_Hea: { name: '沙雕搞笑 vs 治愈救赎' },
+      S_Sis: { name: '天降系 vs 青梅/实妹系' }
+    };
+
+    // 40道题
+    const questions = [
+      // Dim 1: P_Tsu (直率 L -> 傲娇 H)
+      { id: 'q1', dim: 'P_Tsu', text: '情人节那天，她递给你一块巧克力，她会怎么说？', options: [ { label: '“这是送给你的！我做了好久呢！”', value: 1 }, { label: '“平时受你照顾了，这是义理巧克力。”', value: 2 }, { label: '“才、才不是特意为你做的！只是材料买多了而已！”', value: 3 } ] },
+      { id: 'q2', dim: 'P_Tsu', text: '你不小心碰到了她的手，她的反应是？', options: [ { label: '顺势握住你的手，冲你傻笑。', value: 1 }, { label: '默默地把手抽回去，脸颊微红。', value: 2 }, { label: '猛地甩开，“笨蛋！色狼！你在摸哪里啊！”', value: 3 } ] },
+      { id: 'q3', dim: 'P_Tsu', text: '当她遇到解不开的数学题时？', options: [ { label: '立刻拿着本子跑来找你：“教教我嘛~”', value: 1 }, { label: '自己憋了很久，最后小声问你能不能帮她。', value: 2 }, { label: '“这种题我当然会做！只不过今天状态不好...你、你要是想讲我也不是不能听。”', value: 3 } ] },
+      { id: 'q4', dim: 'P_Tsu', text: '你夸奖她今天穿的衣服很好看。', options: [ { label: '开心地转个圈：“真的吗？我也超喜欢！”', value: 1 }, { label: '小声说了句：“谢谢...”', value: 2 }, { label: '红着脸撇过头：“别盯着我看啦笨蛋！”', value: 3 } ] },
+
+      // Dim 2: P_Kuu (元气 L -> 三无 H)
+      { id: 'q5', dim: 'P_Kuu', text: '周末你们一起去游乐园，她的状态是？', options: [ { label: '拉着你到处跑，什么项目都要玩。', value: 1 }, { label: '跟在你身边，遇到感兴趣的会多看两眼。', value: 2 }, { label: '面无表情地捧着可丽饼，安静地看着你。', value: 3 } ] },
+      { id: 'q6', dim: 'P_Kuu', text: '给她发搞笑视频，她的回复通常是？', options: [ { label: '“哈哈哈哈哈哈救命太好笑了！”', value: 1 }, { label: '发一个可爱的笑脸表情包。', value: 2 }, { label: '“嗯，看到了。” 或者干脆只回一个句号。', value: 3 } ] },
+      { id: 'q7', dim: 'P_Kuu', text: '遇到开心的事情时，她的面部表情？', options: [ { label: '眼睛闪闪发光，笑得特别灿烂。', value: 1 }, { label: '温柔地浅笑。', value: 2 }, { label: '几乎没变化，但眼神会变得柔和，嘴角微微牵动0.1毫米。', value: 3 } ] },
+      { id: 'q8', dim: 'P_Kuu', text: '房间里的背景音通常是？', options: [ { label: '她叽叽喳喳说个不停的声音或是在唱歌。', value: 1 }, { label: '偶尔的聊天声和电视声。', value: 2 }, { label: '极度安静，只能听到翻书的声音。', value: 3 } ] },
+
+      // Dim 3: P_Mat (稚气 L -> 早熟/腹黑 H)
+      { id: 'q9', dim: 'P_Mat', text: '聊起未来的梦想，她会说？', options: [ { label: '“我想当魔法少女/大明星！”', value: 1 }, { label: '“想开一家甜品店。”', value: 2 }, { label: '“这世界很无聊，我只想安静地活下去。”或者给你一个意味深长的笑。', value: 3 } ] },
+      { id: 'q10', dim: 'P_Mat', text: '面对大人的无理指责，她会？', options: [ { label: '委屈地哭出来，躲到你身后。', value: 1 }, { label: '低头不说话，默默忍受。', value: 2 }, { label: '用极度冷静的逻辑或腹黑的话语把对方怼得哑口无言。', value: 3 } ] },
+      { id: 'q11', dim: 'P_Mat', text: '晚上看电视，她倾向于选择？', options: [ { label: '子供向动画片或者搞笑综艺。', value: 1 }, { label: '青春偶像剧。', value: 2 }, { label: '悬疑推理剧或者深夜情感档（还会对里面的套路嗤之以鼻）。', value: 3 } ] },
+      { id: 'q12', dim: 'P_Mat', text: '平时她怎么看待你？', options: [ { label: '无所不能的可靠哥哥大人！', value: 1 }, { label: '关系很好的同伴。', value: 2 }, { label: '“真是个无可救药的萝莉控笨蛋呢~”', value: 3 } ] },
+
+      // Dim 4: A_Kemo (人类 L -> 异种族 H)
+      { id: 'q13', dim: 'A_Kemo', text: '如果她身上有一处非人特征，你希望是？', options: [ { label: '不要特殊特征，普通的人类女孩子最可爱。', value: 1 }, { label: '虎牙或者尖尖的精灵耳。', value: 2 }, { label: '毛茸茸的兽耳和在背后晃来晃去的大尾巴。', value: 3 } ] },
+      { id: 'q14', dim: 'A_Kemo', text: '她的日常动作习惯更偏向于？', options: [ { label: '正常的小女孩的动作。', value: 1 }, { label: '偶尔有些像小动物一样轻盈。', value: 2 }, { label: '会有猫咪洗脸、狗狗摇尾巴等明显的动物本能习性。', value: 3 } ] },
+      { id: 'q15', dim: 'A_Kemo', text: '关于“摸头杀”，她的反应？', options: [ { label: '害羞或者开心。', value: 1 }, { label: '眯着眼睛享受。', value: 2 }, { label: '喉咙里会发出“呼噜呼噜”的声音。', value: 3 } ] },
+      { id: 'q16', dim: 'A_Kemo', text: '她最喜欢的食物通常是？', options: [ { label: '蛋糕、冰淇淋、草莓。', value: 1 }, { label: '正常的家常菜。', value: 2 }, { label: '只吃肉，或者疯狂喜欢鱼，甚至喝血。', value: 3 } ] },
+
+      // Dim 5: A_Goth (日常装 L -> 华丽洋装 H)
+      { id: 'q17', dim: 'A_Goth', text: '约会时，她最常穿的服装是？', options: [ { label: '简单的T恤和牛仔短裤/背带裤。', value: 1 }, { label: '水手服或者JK制服。', value: 2 }, { label: '层层叠叠的哥特萝莉塔裙，带蕾丝阳伞。', value: 3 } ] },
+      { id: 'q18', dim: 'A_Goth', text: '她的房间布置风格是？', options: [ { label: '温馨明亮，乱糟糟地堆着玩具和零食。', value: 1 }, { label: '整洁的日式榻榻米或者普通卧室。', value: 2 }, { label: '暗色系，充满蔷薇、十字架、古董娃娃。', value: 3 } ] },
+      { id: 'q19', dim: 'A_Goth', text: '她最喜欢的配饰是？', options: [ { label: '发卡或者简单的头绳。', value: 1 }, { label: '蝴蝶结或者眼镜。', value: 2 }, { label: '眼罩、绷带、项圈或者华丽的洋装发带。', value: 3 } ] },
+      { id: 'q20', dim: 'A_Goth', text: '对于“打扮”这件事，她的态度是？', options: [ { label: '嫌麻烦，能出门就行。', value: 1 }, { label: '会在意别人的目光，保持整洁。', value: 2 }, { label: '这是一种神圣的仪式，每天必须花一小时穿繁琐的衣服。', value: 3 } ] },
+
+      // Dim 6: I_Dep (独立 L -> 粘人 H)
+      { id: 'q21', dim: 'I_Dep', text: '你在打游戏或者加班时，她会？', options: [ { label: '自己去一旁看书或者玩游戏，互不打扰。', value: 1 }, { label: '给你倒杯水，然后在一旁安静看着。', value: 2 }, { label: '直接钻进你怀里，或者趴在你背上不让你专心。', value: 3 } ] },
+      { id: 'q22', dim: 'I_Dep', text: '睡觉时，她更喜欢？', options: [ { label: '自己睡自己的床。', value: 1 }, { label: '害怕的时候才会来找你一起睡。', value: 2 }, { label: '必须抱着你的胳膊或者枕着你才能睡着。', value: 3 } ] },
+      { id: 'q23', dim: 'I_Dep', text: '你要出远门三天，她的反应？', options: [ { label: '“哦，路上小心，记得带礼物。”', value: 1 }, { label: '稍微有点失落，“早点回来哦”。', value: 2 }, { label: '大哭大闹，或者偷偷把自己塞进你的行李箱。', value: 3 } ] },
+      { id: 'q24', dim: 'I_Dep', text: '走在街上，你们的行进状态通常是？', options: [ { label: '并排走，偶尔聊两句。', value: 1 }, { label: '牵着手走。', value: 2 }, { label: '她必须紧紧拽着你的衣角，寸步不离。', value: 3 } ] },
+
+      // Dim 7: I_Dom (乖巧 L -> 小恶魔调戏 H)
+      { id: 'q25', dim: 'I_Dom', text: '你玩游戏输了或者犯了低级错误，她会？', options: [ { label: '安慰你：“没关系的，下次加油。”', value: 1 }, { label: '叹口气帮你收拾烂摊子。', value: 2 }, { label: '带着嘲讽的坏笑：“杂鱼~连这种事都做不好吗？”', value: 3 } ] },
+      { id: 'q26', dim: 'I_Dom', text: '早晨叫你起床的方式？', options: [ { label: '轻轻摇你的肩膀：“早上好。”', value: 1 }, { label: '直接把被子掀开。', value: 2 }, { label: '捏住你的鼻子，或者在你耳边吹气恶作剧。', value: 3 } ] },
+      { id: 'q27', dim: 'I_Dom', text: '在你们的相处中，谁占据主动权？', options: [ { label: '基本都是你负责照顾她、安排计划。', value: 1 }, { label: '互相商量。', value: 2 }, { label: '你完全被她拿捏在股掌之中，被牵着鼻子走。', value: 3 } ] },
+      { id: 'q28', dim: 'I_Dom', text: '她看你的眼神通常是？', options: [ { label: '充满仰慕和信任。', value: 1 }, { label: '平静或者害羞。', value: 2 }, { label: '像是在看有趣的玩具，充满戏谑的笑意。', value: 3 } ] },
+
+      // Dim 8: I_Pro (需要保护 L -> 战力爆表 H)
+      { id: 'q29', dim: 'I_Pro', text: '遇到小混混找茬，情况会如何发展？', options: [ { label: '她躲在你身后发抖，你出面保护她。', value: 1 }, { label: '你们拉着手赶紧跑路。', value: 2 }, { label: '她叹了口气，打了个响指，小混混灰飞烟灭。', value: 3 } ] },
+      { id: 'q30', dim: 'I_Pro', text: '如果她有隐藏身份，你觉得是？', options: [ { label: '没有隐藏身份，就是个普通的国中生。', value: 1 }, { label: '财阀千金或者天才黑客。', value: 2 }, { label: '活了千年的吸血鬼真祖 / 异世界的最强魔王。', value: 3 } ] },
+      { id: 'q31', dim: 'I_Pro', text: '当你不小心受了重伤？', options: [ { label: '她急得大哭，到处找人帮忙。', value: 1 }, { label: '熟练地帮你包扎。', value: 2 }, { label: '眼神变得极度冰冷，释放出恐怖的杀气去寻找伤你的人。', value: 3 } ] },
+      { id: 'q32', dim: 'I_Pro', text: '你在这段关系里的定位更像是？', options: [ { label: '保护者/骑士。', value: 1 }, { label: '平等的搭档。', value: 2 }, { label: '被她庇护的弱小人类 / 她的专属“挂件”。', value: 3 } ] },
+
+      // Dim 9: S_Hea (搞笑沙雕 L -> 治愈救赎 H)
+      { id: 'q33', dim: 'S_Hea', text: '你们相遇的契机更可能是？', options: [ { label: '叼着面包在转角撞到，或者发生了一系列搞笑的乌龙。', value: 1 }, { label: '正常的同学/邻居关系自然熟络。', value: 2 }, { label: '在你人生最低谷想要放弃时，她像光一样出现在你面前。', value: 3 } ] },
+      { id: 'q34', dim: 'S_Hea', text: '她最打动你的一瞬间是？', options: [ { label: '她做蠢事搞砸了时的滑稽模样。', value: 1 }, { label: '平时傲娇的她突然展现出坦率的一面。', value: 2 }, { label: '背负着沉重宿命的她，在雨中对你露出释然的微笑。', value: 3 } ] },
+      { id: 'q35', dim: 'S_Hea', text: '如果你们的故事是一部番剧，结局是？', options: [ { label: '吵吵闹闹、永不完结的日常！', value: 1 }, { label: '一起考上高中/大学的开放式结局。', value: 2 }, { label: '经历生死考验，互相救赎的催泪大结局（甚至可能是悲剧美学）。', value: 3 } ] },
+      { id: 'q36', dim: 'S_Hea', text: '想到她的时候，你的心里回荡的BGM是？', options: [ { label: '欢快跳跃的电音或洗脑神曲。', value: 1 }, { label: '轻松的吉他/流行乐。', value: 2 }, { label: '极其空灵、略带悲伤的钢琴曲或八音盒旋律。', value: 3 } ] },
+
+      // Dim 10: S_Sis (天降/陌生 L -> 青梅/实妹 H)
+      { id: 'q37', dim: 'S_Sis', text: '她对你的称呼通常是？', options: [ { label: '全名，或者“喂”、“那边的家伙”。', value: 1 }, { label: '名字加上君/前辈。', value: 2 }, { label: '欧尼酱！(哥哥) / 笨蛋老哥。', value: 3 } ] },
+      { id: 'q38', dim: 'S_Sis', text: '你们了解彼此的程度？', options: [ { label: '最近才认识，还在慢慢了解中。', value: 1 }, { label: '知道彼此的喜好和性格。', value: 2 }, { label: '连对方小时候尿床、有几根黑历史的毛病都一清二楚。', value: 3 } ] },
+      { id: 'q39', dim: 'S_Sis', text: '每天见面的频率是？', options: [ { label: '上学或者偶尔出去玩才见面。', value: 1 }, { label: '基本每天都在学校或社团见。', value: 2 }, { label: '低头不见抬头见，就住在同一个屋檐下。', value: 3 } ] },
+      { id: 'q40', dim: 'S_Sis', text: '双方家长对你们的关系态度是？', options: [ { label: '完全不知道。', value: 1 }, { label: '觉得是普通朋友。', value: 2 }, { label: '“亲家！反正你们早晚要在一起/毕竟是一家人嘛。”', value: 3 } ] }
+    ];
+
+    // 特殊审查题 (彩蛋)
+    const specialQuestions = [
+      { id: 'fbi_gate', special: true, text: '测试进行到一半，门外突然传来了沉重的敲门声，伴随着一句粗犷的“开门！社区送温暖！”，你的第一反应是？', options: [ { label: '哦，我去开门。', value: 1 }, { label: '装作没听见，继续做测试。', value: 2 }, { label: 'FBI OPEN UP！立刻拔掉硬盘电源，将设备扔进微波炉！', value: 3 } ] }
+    ];
+
+    // L(<=6), M(7-9), H(10-12)
+    // 10维度 pattern。顺序: Tsu, Kuu, Mat, Kemo, Goth, Dep, Dom, Pro, Hea, Sis
+    const TYPE_LIBRARY = {
+      "TSUNDERE": { code: "TSUNDERE", cn: "双马尾傲娇", emoji: "👱‍♀️", intro: "才、才不是特意为你做的！", desc: "教科书式的存在！金发双马尾（大概率），绝对领域，加上口嫌体正直的性格。你的灵魂深处极度渴望被骂“笨蛋、无耻、H”，但又沉迷于她偶尔展露的娇羞。只有攻破那层名为“傲”的护甲，才能品尝到名为“娇”的绝世甜品。" },
+      "KUUDERE": { code: "KUUDERE", cn: "三无白毛", emoji: "❄️", intro: "......哦。", desc: "你的XP系统精准地锁定在了“白发、红瞳、无口、无心、无表情”的最高境界。你不喜欢吵闹，更偏爱那种静谧如雪的陪伴。对你而言，她那千年不变的冰山脸上偶尔闪过的一抹红晕，或者轻轻扯住你衣角的细微动作，其破坏力堪比核弹。" },
+      "DEVIL": { code: "DEVIL", cn: "腹黑小恶魔", emoji: "😈", intro: "杂鱼~大哥哥大笨蛋~", desc: "你有明显的受虐倾向（确信）。你最喜欢被智商或者气场压制，看着她用最无辜可爱的脸，说着最戳人痛处的话。被她调戏、捉弄，看你手足无措的样子是她最大的乐趣。你沉沦在她那声带有拉长尾音的“杂~鱼~”中无法自拔。" },
+      "IMOUTO": { code: "IMOUTO", cn: "软萌实妹", emoji: "🧸", intro: "欧尼酱！最喜欢你了！", desc: "血浓于水（或义妹/青梅）。你是一个骨子里的保护者，有着无可救药的妹控情节。你喜欢被极度依赖的感觉，看着她跟在屁股后面喊“哥哥”。这种超越了普通恋爱的绝对亲密感和羁绊，是你对抗冰冷现实的终极武器。" },
+      "MAGICAL": { code: "MAGICAL", cn: "魔法少女", emoji: "✨", intro: "为了爱与正义！", desc: "你喜欢充满奇幻色彩和宿命感的羁绊。洋装、变身、对抗邪恶，表面光鲜亮丽，背地里却可能背负着沉重的命运甚至致郁的内核。你渴望成为那个能在她崩溃时，唯一接住她、拯救她灵魂的普通人。" },
+      "KEMONO": { code: "KEMONO", cn: "兽耳小狐娘", emoji: "🦊", intro: "呜喵？主人的味道...", desc: "福瑞控/兽耳控狂喜！你对毛茸茸的耳朵和摇晃的尾巴毫无抵抗力。你更像是一个饲养员，享受投喂、顺毛、听她发出“呼噜呼噜”声的快感。野性与纯真的结合，让你每天都处在被萌杀的边缘。" },
+      "VAMPIRE": { code: "VAMPIRE", cn: "吸血鬼真祖", emoji: "🦇", intro: "人类，献上你的鲜血吧。", desc: "你喜欢极端的反差萌：外表是个幼女，心智却是活了千年的老太婆（划掉）女王。战斗力天花板，在暗夜中主宰一切，却偏偏对你这个普通人类产生了兴趣。你愿意成为她的眷属，享受被强大力量庇护的背德感。" },
+      "OJOU": { code: "OJOU", cn: "金钻头大小姐", emoji: "☕", intro: "哦呵呵呵呵！庶民！", desc: "贵族气息！你迷恋那标志性的“三段笑”，以及华丽的洋装和贵族做派。虽然表面上高高在上、目中无人，但实际上可能是个缺乏生活常识、渴望普通人陪伴的笨蛋。你最喜欢看她因为庶民小吃而露出震惊表情的反差萌。" },
+      "MAID": { code: "MAID", cn: "万能小女仆", emoji: "🧹", intro: "主人，欢迎回家。", desc: "你渴望绝对的服从和无微不至的照顾。她懂事、听话、全能，无论你多废柴，她都会默默帮你收拾好一切。在冰冷的社会中，只要听到那句“主人”，你所有的疲惫都会烟消云散。" },
+      "GENKI": { code: "GENKI", cn: "元气幼驯染", emoji: "🌻", intro: "别睡啦！快起来陪我玩！", desc: "幼驯染战无不胜！你的羁绊对象就像小太阳一样，充满了活力和元气。哪怕你是个自闭阿宅，也会被她强行拉出房间。不需要猜忌，没有深仇大恨，只有一起吃冰棍、打游戏的无忧无虑的青春日常。" },
+      "NEET": { code: "NEET", cn: "家里蹲网游废人", emoji: "🎮", intro: "再打一局...就一局...", desc: "同频共振！你不喜欢现充的繁琐，就喜欢和同样是废柴的她窝在阴暗的房间里。满地的泡面盒，亮着微光的显示器，你们背靠背打游戏。她极其粘人且缺乏生活自理能力，而这恰好满足了你的照顾欲。" },
+      "ANGEL": { code: "ANGEL", cn: "纯白治愈天使", emoji: "🕊️", intro: "无论发生什么，我都在。", desc: "你可能在现实中受了太多伤。你不需要她战斗力爆表，也不需要什么奇怪的属性，你只想要极致的温柔与治愈。她是纯洁无瑕的天使，能够包容你所有的软弱，听你倾诉，给你最安心的膝枕。" },
+      "CHUNI": { code: "CHUNI", cn: "中二病晚期", emoji: "👁️", intro: "漆黑烈焰使，封印解除！", desc: "邪王真眼是最强的！你喜欢有着奇思妙想、活在自己世界里的女孩。陪着她一起犯中二病，一起念尴尬的台词。剥开她那层“黑暗结界”的伪装后，其实只是一个极度害怕孤独、渴望被理解的普通小女孩。" },
+      "YANDERE": { code: "YANDERE", cn: "病娇妹妹", emoji: "🔪", intro: "欧尼酱只看着我一个人就好了呢...", desc: "危险的爱！你对平淡的感情感到乏味，渴望那种极致、疯狂、甚至带有毁灭倾向的爱恋。她极度粘人，拥有恐怖的控制欲，为了你可以扫清一切障碍。爱她，或者被她做成标本，没有中间选项。" },
+      "BABA": { code: "BABA", cn: "合法萝莉/妈妈", emoji: "🍵", intro: "哎呀呀，现在的年轻人真是...", desc: "终极缝合怪属性——外表是幼女，内心是充满包容感和母性的长辈。当你疲惫时，她会用小小的手拍着你的背说“乖，已经很努力了哦”。享受这种被极致宠溺的感觉吧，妈宝男（划掉）。" },
+      "JAIL": { code: "JAIL", cn: "FBI 高价值目标", emoji: "🚓", intro: "你有权保持沉默！", desc: "警告！你的XP已经突破了二次元的安全界限，引起了网络安全部门的注意。请立刻放下手中的键盘，抱头蹲下！（检测到你触发了查水表彩蛋，说明你有着极高的防范意识或者做贼心虚，拘留所见，朋友。）" }
+    };
+
+    // 10维度模式: Tsu, Kuu, Mat, Kemo, Goth, Dep, Dom, Pro, Hea, Sis
+    const NORMAL_TYPES = [
+      { code: "TSUNDERE", pattern: "HLLLLMMLML" },
+      { code: "KUUDERE", pattern: "LHHLMLLHHL" },
+      { code: "DEVIL", pattern: "MLHLHMHMLL" },
+      { code: "IMOUTO", pattern: "LLLLLHHMHH" },
+      { code: "MAGICAL", pattern: "LLMLHMLHHL" },
+      { code: "KEMONO", pattern: "LLMHMHMMHL" },
+      { code: "VAMPIRE", pattern: "HHHHHLHHML" },
+      { code: "OJOU", pattern: "HLHLHLHLLL" },
+      { code: "MAID", pattern: "MMHLHMLHHL" },
+      { code: "GENKI", pattern: "LLLLLHLLLH" },
+      { code: "NEET", pattern: "MMMLLHLLLM" },
+      { code: "ANGEL", pattern: "LLLLMMLMHL" },
+      { code: "CHUNI", pattern: "HLMLHMLLLL" },
+      { code: "YANDERE", pattern: "MLHLMHHMHH" },
+      { code: "BABA", pattern: "LMHHMLMHML" }
+    ];
+
+    const app = { shuffledQuestions: [], answers: {}, previewMode: false };
+    const screens = { intro: document.getElementById('intro'), test: document.getElementById('test'), result: document.getElementById('result') };
+    const questionList = document.getElementById('questionList');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const submitBtn = document.getElementById('submitBtn');
+    const testHint = document.getElementById('testHint');
+
+    function showScreen(name) {
+      Object.entries(screens).forEach(([key, el]) => { el.classList.toggle('active', key === name); });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function getVisibleQuestions() {
+      const visible = [...app.shuffledQuestions];
+      return visible;
+    }
+
+    function renderQuestions() {
+      const visibleQuestions = getVisibleQuestions();
+      questionList.innerHTML = '';
+      visibleQuestions.forEach((q, index) => {
+        const card = document.createElement('article');
+        card.className = 'question';
+        card.innerHTML = `
+          <div class="question-meta">
+            <div class="badge">第 ${index + 1} 题</div>
+            <div>${q.special ? '紧急事态警告' : 'XP解析矩阵'}</div>
+          </div>
+          <div class="question-title">${q.text}</div>
+          <div class="options">
+            ${q.options.map((opt, i) => {
+              const code = ['A', 'B', 'C', 'D'][i] || String(i + 1);
+              const checked = app.answers[q.id] === opt.value ? 'checked' : '';
+              return `
+                <label class="option">
+                  <input type="radio" name="${q.id}" value="${opt.value}" ${checked} />
+                  <div class="option-code">${code}</div>
+                  <div>${opt.label}</div>
+                </label>
+              `;
+            }).join('')}
+          </div>
+        `;
+        questionList.appendChild(card);
+      });
+
+      questionList.querySelectorAll('input[type="radio"]').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const { name, value } = e.target;
+          app.answers[name] = Number(value);
+          updateProgress();
+        });
+      });
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const visibleQuestions = getVisibleQuestions();
+      const total = visibleQuestions.length;
+      const done = visibleQuestions.filter(q => app.answers[q.id] !== undefined).length;
+      const percent = total ? (done / total) * 100 : 0;
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = `${done} / ${total}`;
+      const complete = done === total && total > 0;
+      submitBtn.disabled = !complete;
+      testHint.textContent = complete ? '脑电波同步完成。准备好迎接你的命运了吗？' : '请凭直觉作答，每一道题都在暴露你的内心。';
+    }
+
+    function sumToLevel(score) { 
+      // 4题，最小4分，最大12分
+      if (score <= 6) return 'L'; 
+      if (score <= 9) return 'M'; 
+      return 'H'; 
+    }
+    
+    function levelNum(level) { return { L: 1, M: 2, H: 3 }[level]; }
+    function parsePattern(pattern) { return pattern.split(''); }
+
+    const DIM_EXPLANATIONS = {
+      P_Tsu: { L: "极度直率，喜欢打直球的坦率性格。", M: "正常人性格，偶尔会有些小别扭。", H: "口嫌体正直晚期，教科书式的傲娇。" },
+      P_Kuu: { L: "像小太阳一样充满活力的元气少女。", M: "安静得体，但情绪表达正常。", H: "面无表情、极少说话的三无冰山。" },
+      P_Mat: { L: "天真烂漫，完全的小孩子心性。", M: "有点自己的小心思，但总体符合年龄。", H: "心智极其早熟，甚至腹黑，能把你玩弄于股掌。" },
+      A_Kemo: { L: "纯粹的普通人类女孩。", M: "带一点点奇幻元素（如发卡、异色瞳）。", H: "绝对的兽耳控/异种族狂热爱好者。" },
+      A_Goth: { L: "越日常越好，T恤短裤制服天下第一。", M: "会打扮自己，喜欢精致的日常服饰。", H: "华丽的哥特萝莉装、洋装、甚至魔法服饰。" },
+      I_Dep: { L: "互不干涉，像猫一样高冷的独立感。", M: "需要陪伴，但也给你个人空间。", H: "极度缺乏安全感，必须24小时贴贴的粘人精。" },
+      I_Dom: { L: "听话乖巧，你是绝对的主导者。", M: "平等相处，有商有量。", H: "她是小恶魔，你是被欺负、被调戏的玩具。" },
+      I_Pro: { L: "柔弱不能自理，极大地激发了你的保护欲。", M: "有自理能力，偶尔需要你帮忙。", H: "武力值天花板，你才是那个需要被包养/保护的。" },
+      S_Hea: { L: "没心没肺的沙雕搞笑日常。", M: "平淡温馨的青春物语。", H: "深沉的宿命感，相互救赎的极致治愈（致郁）。" },
+      S_Sis: { L: "萍水相逢，充满未知的天降系。", M: "普通的同学/邻居转变为羁绊。", H: "知根知底，血浓于水的实妹/青梅系。" }
+    };
+
+    const dimensionOrder = ['P_Tsu','P_Kuu','P_Mat','A_Kemo','A_Goth','I_Dep','I_Dom','I_Pro','S_Hea','S_Sis'];
+
+    function computeResult() {
+      const isJailTriggered = app.answers['fbi_gate'] === 3;
+
+      const rawScores = {}; const levels = {};
+      Object.keys(dimensionMeta).forEach(dim => { rawScores[dim] = 0; });
+      
+      questions.forEach(q => { rawScores[q.dim] += Number(app.answers[q.id] || 0); });
+      Object.entries(rawScores).forEach(([dim, score]) => { levels[dim] = sumToLevel(score); });
+
+      const userVector = dimensionOrder.map(dim => levelNum(levels[dim]));
+      const ranked = NORMAL_TYPES.map(type => {
+        const vector = parsePattern(type.pattern).map(levelNum);
+        let distance = 0, exact = 0;
+        // 10维度，最大距离 10*2 = 20
+        for (let i = 0; i < vector.length; i++) {
+          const diff = Math.abs(userVector[i] - vector[i]);
+          distance += diff;
+          if (diff === 0) exact += 1;
+        }
+        const similarity = Math.max(0, Math.round((1 - distance / 20) * 100));
+        return { ...type, ...TYPE_LIBRARY[type.code], distance, exact, similarity };
+      }).sort((a, b) => {
+        if (a.distance !== b.distance) return a.distance - b.distance;
+        if (b.exact !== a.exact) return b.exact - a.exact;
+        return b.similarity - a.similarity;
+      });
+
+      const bestNormal = ranked[0];
+      let finalType, modeKicker = '核心羁绊属性', badge = `灵魂契合度 ${bestNormal.similarity}%`, sub = '命运的红线已将你们绑定。';
+      
+      if (isJailTriggered) {
+        finalType = TYPE_LIBRARY.JAIL;
+        modeKicker = '严重警告';
+        badge = '危险评级：极高';
+        sub = '你的XP系统过于危险，即将实施抓捕！';
+      } else {
+        finalType = bestNormal;
+      }
+      return { rawScores, levels, finalType, modeKicker, badge, sub, isJailTriggered };
+    }
+
+    function renderResult() {
+      const result = computeResult();
+      const type = result.finalType;
+
+      document.getElementById('resultModeKicker').textContent = result.modeKicker;
+      document.getElementById('resultTypeName').textContent = `${type.code}（${type.cn}）`;
+      document.getElementById('matchBadge').textContent = result.badge;
+      document.getElementById('resultTypeSub').textContent = result.sub;
+      document.getElementById('resultDesc').textContent = type.desc;
+      document.getElementById('posterCaption').textContent = type.intro;
+      document.getElementById('posterEmoji').textContent = type.emoji;
+
+      const dimList = document.getElementById('dimList');
+      if (result.isJailTriggered) {
+         dimList.innerHTML = `<div class="dim-item"><p style="color:var(--accent-strong); font-weight:bold; text-align:center;">雷达图因涉嫌违规已被查封！</p></div>`;
+      } else {
+        dimList.innerHTML = dimensionOrder.map(dim => {
+          const level = result.levels[dim];
+          return `
+            <div class="dim-item">
+              <div class="dim-item-top">
+                <div class="dim-item-name">${dimensionMeta[dim].name}</div>
+                <div class="dim-item-score">${level} 型雷达</div>
+              </div>
+              <p>${DIM_EXPLANATIONS[dim][level]}</p>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      showScreen('result');
+    }
+
+    function startTest() {
+      app.answers = {};
+      const shuffledRegular = shuffle(questions);
+      // 随机插入 FBI 审查题
+      const insertIndex = Math.floor(Math.random() * 30) + 5; 
+      app.shuffledQuestions = [
+        ...shuffledRegular.slice(0, insertIndex),
+        specialQuestions[0],
+        ...shuffledRegular.slice(insertIndex)
+      ];
+      renderQuestions();
+      showScreen('test');
+    }
+
+    document.getElementById('startBtn').addEventListener('click', startTest);
+    document.getElementById('backIntroBtn').addEventListener('click', () => showScreen('intro'));
+    document.getElementById('submitBtn').addEventListener('click', renderResult);
+    document.getElementById('restartBtn').addEventListener('click', startTest);
+    document.getElementById('toTopBtn').addEventListener('click', () => showScreen('intro'));
+  </script>
+</body>
+</html>
